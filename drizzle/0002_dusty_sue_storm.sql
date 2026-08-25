@@ -1,0 +1,1 @@
+ALTER TABLE `booking_requests` ADD `boat_rental` integer DEFAULT false NOT NULL;

@@ -1,0 +1,1 @@
+ALTER TABLE `booking_requests` ADD `pets` integer DEFAULT 0 NOT NULL;
