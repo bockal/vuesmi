@@ -26,7 +26,7 @@ export async function POST(request:Request){
     const detail=`${quote.guests} guests · ${quote.nights} nights${pets?" · pet included":""}${boatRental?" · boat rental requested":""} · ${money(quote.totalCents)} including 6% Michigan lodging tax`;
     const safeName=escapeHtml(p.name.trim());
     await Promise.allSettled([
-      sendMail({to:"bockal@gmail.com",subject:`New Vues request: ${p.arrival}–${p.departure}`,html:`<h2>New booking request</h2><p><strong>${safeName}</strong> requested ${escapeHtml(p.arrival)} through ${escapeHtml(p.departure)}.</p><p>${escapeHtml(detail)}</p><p>Review and approve it in the <a href="https://the-vues-klinger-lake.bockal.chatgpt.site/owner">owner dashboard</a>.</p>`}),
+      sendMail({to:"bockal@gmail.com",subject:`New Vues request: ${p.arrival}–${p.departure}`,html:`<h2>New booking request</h2><p><strong>${safeName}</strong> requested ${escapeHtml(p.arrival)} through ${escapeHtml(p.departure)}.</p><p>${escapeHtml(detail)}</p><p>Review and approve it in the <a href="https://vuesmi.com/owner">owner dashboard</a>.</p>`}),
       sendMail({to:p.email.trim().toLowerCase(),subject:"We received your request for The Vues",html:`<h2>Thanks, ${safeName}.</h2><p>We received your request for ${escapeHtml(p.arrival)} through ${escapeHtml(p.departure)}.</p><p>${escapeHtml(detail)}, including a ${money(quote.cleaningCents)} cleaning fee${pets?`, ${money(quote.petCents)} pet fee`:""}${boatRental?`, ${money(quote.boatRentalCents)} boat rental`:""}, and ${money(quote.taxCents)} Michigan lodging tax.</p><p>Nothing has been charged. If the owners approve your stay, we’ll email Zelle and Venmo payment options.</p>`}),
     ]);
     return Response.json({id:booking.id,quote},{status:201});
