@@ -4,7 +4,7 @@ import "./listing.css";
 import "./instagram.css";
 
 const GOOGLE_LISTING="https://maps.app.goo.gl/Q8psuLeMhAzbFGWGA";
-const amenities=[["≋","100 ft private shoreline"],["⚓","Private dock / pier"],["☀","1,021 sq ft lakeside deck"],["◒","Kayaks included"],["↝","Pontoon / jet-ski rental · $100/day"],["⌁","Firepit"],["◉","Lake views"],["⌂","Full kitchen with quartz counters"],["♨","Indoor fireplace"],["⌁","High-speed Wi-Fi"],["▣","Smart TVs"],["❄","Central air conditioning"],["♨","Heating"],["◫","Washer and dryer"],["◇","Water softener and filtration"],["P","On-site parking"],["✓","Smoke and CO alarms"]];
+const amenities=[["≋","100 ft private shoreline"],["⚓","Private dock / pier"],["☀","1,021 sq ft lakeside deck"],["◒","Kayaks included"],["↝","Pontoon / jet-ski rental · $100/day"],["⌁","Firepit"],["◉","Lake views"],["⌂","Full kitchen with quartz counters"],["♨","Indoor fireplace"],["⌁","High-speed Wi-Fi"],["▣","Smart TVs"],["❄","Central air conditioning"],["♨","Heating"],["◫","Washer and dryer"],["◇","Water softener and filtration"],["⚡","Universal electric vehicle charger"],["P","On-site parking"],["✓","Smoke and CO alarms"]];
 const reviews=[
   {name:"Heather Voit",text:"Paradise in Michigan! Beautiful lake house with a fully equipped kitchen, plenty of space for a big…"},
   {name:"Becky Gash",text:"Clean, organized and spacious! The bathrooms and kitchen were updated and the house had a beautiful…"},
