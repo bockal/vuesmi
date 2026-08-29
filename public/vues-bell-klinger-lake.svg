@@ -1,0 +1,18 @@
+<svg width="512" height="512" viewBox="0 0 76 76" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="76" height="76" rx="14" fill="#E5D4B8"/>
+  <g stroke="#3C2922" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M23 35c4-4 5-10 5-17 0-5 4-8 10-8s10 3 10 8c0 7 1 13 5 17H23Z" stroke-width="2.6"/>
+    <path d="M20 36h36M34 39c0 5 8 5 8 0" stroke-width="2.6"/>
+    <circle cx="38" cy="42" r="2.1" stroke-width="2.2"/>
+    <path d="M20 41c5 1 10 4 15 9M56 41c-5 1-10 4-15 9" stroke-width="5.8"/>
+    <path d="M35 47L31 68h14l-4-21Z" fill="#E5D4B8" stroke-width="2.8"/>
+    <circle cx="38" cy="53" r="1.6" fill="#3C2922" stroke="none"/>
+    <circle cx="35.5" cy="59" r="1.6" fill="#3C2922" stroke="none"/>
+    <circle cx="40.5" cy="63" r="1.6" fill="#3C2922" stroke="none"/>
+    <path d="M18 43h6M52 43h6M29 69h18" stroke-width="2.6"/>
+  </g>
+  <g fill="#E5D4B8" font-family="Georgia,serif" font-weight="700" font-size="3.5" letter-spacing=".25">
+    <text x="19.5" y="40.7" transform="rotate(22 19.5 40.7)">KLINGER</text>
+    <text x="45.5" y="44.6" transform="rotate(-22 45.5 44.6)">LAKE</text>
+  </g>
+</svg>
