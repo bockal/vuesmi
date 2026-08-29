@@ -17,12 +17,12 @@ export default function PushNotifications(){
     try{
       const permission=await Notification.requestPermission();
       if(permission!=="granted"){setMessage("Notifications were not allowed. Enable them in your phone settings and try again.");setState("error");return}
-      const keyResponse=await fetch("/api/push");
+      const keyResponse=await fetch("/owner/api/push");
       const keyData=await keyResponse.json() as {publicKey?:string;error?:string};
       if(!keyResponse.ok||!keyData.publicKey)throw new Error(keyData.error??"Push is unavailable.");
       const registration=await navigator.serviceWorker.ready;
       const subscription=await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:decodeKey(keyData.publicKey)});
-      const response=await fetch("/api/push",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(subscription)});
+      const response=await fetch("/owner/api/push",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(subscription)});
       if(!response.ok)throw new Error("Your phone could not be registered.");
       setState("enabled");
     }catch(error){setMessage(error instanceof Error?error.message:"Could not enable notifications.");setState("error")}
@@ -32,7 +32,7 @@ export default function PushNotifications(){
     setState("working");
     const registration=await navigator.serviceWorker.ready;
     const subscription=await registration.pushManager.getSubscription();
-    if(subscription){await fetch("/api/push",{method:"DELETE",headers:{"content-type":"application/json"},body:JSON.stringify({endpoint:subscription.endpoint})});await subscription.unsubscribe()}
+    if(subscription){await fetch("/owner/api/push",{method:"DELETE",headers:{"content-type":"application/json"},body:JSON.stringify({endpoint:subscription.endpoint})});await subscription.unsubscribe()}
     setState("available");
   }
 
