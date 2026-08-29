@@ -9,6 +9,6 @@ export default function manifest():MetadataRoute.Manifest{
     display:"standalone",
     background_color:"#ffffff",
     theme_color:"#173f3a",
-    icons:[{src:"/vues-bell-yoke.svg",sizes:"any",type:"image/svg+xml",purpose:"any"}],
+    icons:[{src:"/vues-bell-klinger-lake.svg",sizes:"any",type:"image/svg+xml",purpose:"any"}],
   };
 }
