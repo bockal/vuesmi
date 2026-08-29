@@ -9,3 +9,13 @@ export const dateBlocks=sqliteTable("date_blocks",{
   label:text("label").notNull().default("Owner blocked"),
   createdAt:text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
+
+
+export const pushSubscriptions=sqliteTable("push_subscriptions",{
+  id:integer("id").primaryKey({autoIncrement:true}),
+  ownerEmail:text("owner_email").notNull(),
+  endpoint:text("endpoint").notNull().unique(),
+  p256dh:text("p256dh").notNull(),
+  auth:text("auth").notNull(),
+  createdAt:text("created_at").notNull().default(sql\`CURRENT_TIMESTAMP\`),
+});

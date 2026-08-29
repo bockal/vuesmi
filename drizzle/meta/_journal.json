@@ -29,6 +29,13 @@
       "when": 1787601072157,
       "tag": "0003_shallow_omega_red",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1788034923561,
+      "tag": "0004_push_subscriptions",
+      "breakpoints": true
     }
   ]
 }

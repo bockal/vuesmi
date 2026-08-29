@@ -1,6 +1,7 @@
 import { getAuthorizedOwner } from "../owner-auth";
 import OwnerCalendar from "./owner-calendar";
 import Link from "next/link";
+import PushNotifications from "./push-notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +31,7 @@ export default async function OwnerPage() {
         </div>
         <a href="/cdn-cgi/access/logout">Sign out</a>
       </header>
+      <PushNotifications />
       <OwnerCalendar />
     </main>
   );
