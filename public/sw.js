@@ -1,5 +1,5 @@
-const CACHE="the-vues-shell-v1";
-const SHELL=["/","/manifest.webmanifest","/favicon.svg"];
+const CACHE="the-vues-shell-v2";
+const SHELL=["/","/manifest.webmanifest","/vues-bell.svg"];
 self.addEventListener("install",event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)));self.skipWaiting()});
 self.addEventListener("activate",event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key)))));self.clients.claim()});
 self.addEventListener("fetch",event=>{
@@ -8,7 +8,7 @@ self.addEventListener("fetch",event=>{
 });
 self.addEventListener("push",event=>{
   let data={};try{data=event.data?event.data.json():{}}catch{data={body:event.data?.text()}};
-  event.waitUntil(self.registration.showNotification(data.title||"New Vues booking request",{body:data.body||"Open the owner portal to review it.",icon:"/favicon.svg",badge:"/favicon.svg",data:{url:data.url||"/owner"},tag:data.tag||"vues-booking"}));
+  event.waitUntil(self.registration.showNotification(data.title||"New Vues booking request",{body:data.body||"Open the owner portal to review it.",icon:"/vues-bell.svg",badge:"/vues-bell.svg",data:{url:data.url||"/owner"},tag:data.tag||"vues-booking"}));
 });
 self.addEventListener("notificationclick",event=>{
   event.notification.close();const url=new URL(event.notification.data?.url||"/owner",self.location.origin).href;
