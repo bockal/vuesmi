@@ -2,6 +2,7 @@ import AvailabilityCalendar from "./availability-calendar";
 import BookingForm from "./booking-form";
 import "./listing.css";
 import "./instagram.css";
+import InstallApp from "./install-app";
 
 const GOOGLE_LISTING="https://maps.app.goo.gl/Q8psuLeMhAzbFGWGA";
 const amenities=[["≋","100 ft private shoreline"],["⚓","Private dock / pier"],["☀","1,021 sq ft lakeside deck"],["◒","Kayaks included"],["↝","Pontoon / jet-ski rental · $100/day"],["⌁","Firepit"],["◉","Lake views"],["⌂","Full kitchen with quartz counters"],["♨","Indoor fireplace"],["⌁","High-speed Wi-Fi"],["▣","Smart TVs"],["❄","Central air conditioning"],["♨","Heating"],["◫","Washer and dryer"],["◇","Water softener and filtration"],["⚡","Universal electric vehicle charger"],["P","On-site parking"],["✓","Smoke and CO alarms"]];
@@ -21,7 +22,7 @@ export default function Home(){return <main>
     <section id="availability" className="availabilitySection"><AvailabilityCalendar/></section>
     <section id="reviews" className="reviews"><div className="reviewsHead"><div><p className="googleG">G</p><h2>5.0 · 3 Google reviews</h2><p>Guest stories and photos from Klinger Lake.</p></div><a href={GOOGLE_LISTING} target="_blank" rel="noreferrer">Read the reviews on Google ↗</a></div><div className="reviewRail"><ReviewCard review={reviews[0]}/><ReviewPhoto src="/property/deck-view.jpg" alt="Darker evening lake view shared by Heather" caption="Guest photo shared by Heather"/><ReviewCard review={reviews[1]}/><ReviewPhoto src="/property/review-firepit.png" alt="Couple enjoying a lakeside fire at sunset" caption="Evenings made for the lake"/><ReviewCard review={reviews[2]}/><ReviewPhoto src="/property/review-kayaks.png" alt="Guests kayaking in Klinger Lake" caption="Kayaks are included with every stay"/></div></section>
   </div>
-  <footer><div className="brand">THE VUES</div><p>Klinger Lake · Sturgis, Michigan</p><a href="/owner">Owner calendar</a></footer>
+  <footer><div className="brand">THE VUES</div><p>Klinger Lake · Sturgis, Michigan</p><div className="footerActions"><InstallApp/><a href="/owner">Owner calendar</a></div></footer>
 </main>}
 
 function ReviewCard({review}:{review:{name:string;text:string}}){return <article className="reviewCard"><span>★★★★★</span><blockquote>“{review.text}”</blockquote><h3>{review.name}</h3><a href={GOOGLE_LISTING} target="_blank" rel="noreferrer">Verified on Google ↗</a></article>}
