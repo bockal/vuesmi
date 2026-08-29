@@ -9,7 +9,12 @@ export default function PushNotifications(){
 
   useEffect(()=>{
     if(!("serviceWorker" in navigator)||!("PushManager" in window)||!("Notification" in window)){setState("unsupported");return}
-    navigator.serviceWorker.register("/sw.js").then(()=>navigator.serviceWorker.ready).then(registration=>registration.pushManager.getSubscription()).then(subscription=>setState(subscription?"enabled":"available")).catch(()=>setState("error"));
+    navigator.serviceWorker.register("/sw.js").then(()=>navigator.serviceWorker.ready).then(registration=>registration.pushManager.getSubscription()).then(async subscription=>{
+      if(!subscription){setState("available");return}
+      const response=await fetch("/owner/api/push",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(subscription)});
+      if(!response.ok)throw new Error("Could not register this phone.");
+      setState("enabled");
+    }).catch(()=>setState("error"));
   },[]);
 
   async function enable(){
@@ -43,3 +48,4 @@ export default function PushNotifications(){
     <small>On iPhone, open the installed The Vues app—not Safari—to enable alerts.</small>
   </section>;
 }
+
