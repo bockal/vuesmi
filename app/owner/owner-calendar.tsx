@@ -3,7 +3,7 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 
 type Block={id:number;startDate:string;endDate:string;label:string};
 type Booking={id:number;arrival:string;departure:string;adults:number;children:number;boatRental:boolean;name:string;email:string;phone:string;note:string;status:string;quoteCents:number|null};
-type Action="approve"|"decline"|"confirm";
+type Action="approve"|"decline"|"confirm"|"cancel";
 const usd=(c:number|null)=>c==null?"Quote pending":new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(c/100);
 
 export default function OwnerCalendar(){
@@ -30,6 +30,10 @@ export default function OwnerCalendar(){
     if(!r.ok)setError(d.error??"Could not update request");
     await load();setWorking(null);
   }
+  async function cancelReservation(id:number){
+    if(!window.confirm("Cancel this reservation and release its dates on the calendar?"))return;
+    await review(id,"cancel");
+  }
 
   return <>
     <section className="requestPanel">
@@ -40,7 +44,8 @@ export default function OwnerCalendar(){
         <h3>{r.name}</h3><p>{r.adults+r.children} guests · {usd(r.quoteCents)}{r.boatRental?" · Boat rental requested":""}</p>
         <p><a href={`mailto:${r.email}`}>{r.email}</a> · <a href={`tel:${r.phone}`}>{r.phone}</a></p>{r.note&&<p className="requestNote">“{r.note}”</p>}
         {r.status==="requested"&&<div className="reviewActions"><button disabled={working===r.id} onClick={()=>review(r.id,"approve")}>{working===r.id?"Working…":"Approve & email payment options"}</button><button className="secondary" disabled={working===r.id} onClick={()=>review(r.id,"decline")}>Decline</button></div>}
-        {r.status==="approved"&&<div className="reviewActions"><button disabled={working===r.id} onClick={()=>review(r.id,"confirm")}>{working===r.id?"Working…":"Mark deposit received"}</button></div>}
+        {r.status==="approved"&&<div className="reviewActions"><button disabled={working===r.id} onClick={()=>review(r.id,"confirm")}>{working===r.id?"Working…":"Mark deposit received"}</button><button className="secondary" disabled={working===r.id} onClick={()=>cancelReservation(r.id)}>Cancel reservation</button></div>}
+        {r.status==="confirmed"&&<div className="reviewActions"><button className="secondary" disabled={working===r.id} onClick={()=>cancelReservation(r.id)}>{working===r.id?"Working…":"Cancel reservation"}</button></div>}
       </article>)}</div>
     </section>
     <div className="ownerGrid">
