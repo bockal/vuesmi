@@ -14,7 +14,7 @@ const reviews=[
 const nearby=[
   {name:"Enjoy a full Klinger Lake day",text:"Swim from the private shoreline, launch the included kayaks, fish from the dock or spend the afternoon boating on this all-sports lake.",href:"https://sturgesyoung.com/plan-your-visit/"},
   {name:"Explore downtown Sturgis",text:"Browse local shops, galleries and Michigan-made goods, then settle in for dinner or coffee in the historic downtown district.",href:"https://www.michigan.org/city/sturgis"},
-  {name:"Hike Camp Fort Hill and Timm Preserve",text:"Discover woodlands, shoreline and quiet nature trails close to the cottage—an easy change of pace from a day on the water.",href:"https://www.michigan.org/city/sturgis"},
+  {name:"Visit the University of Notre Dame",text:"Make a day trip to the iconic South Bend campus to see the Golden Dome, Basilica, Grotto and Touchdown Jesus—or plan your stay around a Fighting Irish weekend.",href:"https://www.nd.edu/about/visit/"},
   {name:"Take a Shipshewana day trip",text:"Visit Northern Indiana Amish Country for markets, handcrafted goods, theater, food and family-friendly attractions.",href:"https://visitshipshewana.org/things-to-do/"},
   {name:"Visit Pokagon State Park",text:"Hike wooded trails, enjoy Lake James beaches and boating, or return in winter for the famous refrigerated toboggan run.",href:"https://www.in.gov/dnr/state-parks/parks-lakes/pokagon-state-parktrine-state-recreation-area/"},
 ];
