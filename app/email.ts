@@ -2,12 +2,23 @@ import { env } from "cloudflare:workers";
 
 type Mail = { to: string | string[]; subject: string; html: string };
 
+const brandedHeader = `
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="center" style="padding:0 0 22px">
+        <a href="https://vuesmi.com" style="text-decoration:none">
+          <img src="https://vuesmi.com/vues-farm-bell-192.png" width="64" height="64" alt="The Vues at Klinger Lake" style="display:block;width:64px;height:64px;margin:0 auto;border:0;border-radius:14px">
+        </a>
+      </td>
+    </tr>
+  </table>`;
+
 const brandedFooter = `
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:32px;border-top:1px solid #dfd8c8">
     <tr>
       <td align="center" style="padding:24px 12px 8px">
         <a href="https://vuesmi.com" style="text-decoration:none">
-          <img src="https://vuesmi.com/vues-farm-bell-192.png" width="88" height="88" alt="The Vues at Klinger Lake — Purdue bell and yoke" style="display:block;width:88px;height:88px;margin:0 auto 12px;border:0">
+          <img src="https://vuesmi.com/property/klinger-house-sketch-bw.webp" width="520" alt="Lakeside sketch of The Vues at Klinger Lake" style="display:block;width:100%;max-width:520px;height:auto;margin:0 auto 18px;border:0">
         </a>
         <p style="margin:0;color:#173f3a;font-family:Georgia,Times New Roman,serif;font-size:18px;font-weight:bold;line-height:1.35">The Vues at Klinger Lake</p>
         <p style="margin:5px 0 0;color:#6b6559;font-family:Arial,sans-serif;font-size:12px;line-height:1.5">
@@ -20,6 +31,7 @@ const brandedFooter = `
 function brandEmail(content: string) {
   return `<div style="margin:0;background:#f6f3eb;padding:24px 12px">
     <div style="max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #e6dfd0;border-radius:12px;padding:28px;color:#222222;font-family:Arial,sans-serif;line-height:1.55">
+      ${brandedHeader}
       ${content}
       ${brandedFooter}
     </div>
