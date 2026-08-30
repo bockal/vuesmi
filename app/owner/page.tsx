@@ -22,6 +22,9 @@ export default async function OwnerPage() {
     );
   }
 
+  const feed = "https://vuesmi.com/calendar.ics";
+  const googleCalendar = `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(feed)}`;
+
   return (
     <main className="ownerShell">
       <header className="ownerHeader">
@@ -32,7 +35,16 @@ export default async function OwnerPage() {
         <a href="/cdn-cgi/access/logout">Sign out</a>
       </header>
       <PushNotifications />
+      <section className="calendarSync">
+        <div>
+          <p className="eyebrow">Calendar sync</p>
+          <h2>Keep Google Calendar up to date</h2>
+          <p>Subscribe once to automatically see confirmed stays and owner-blocked dates.</p>
+        </div>
+        <a href={googleCalendar} target="_blank" rel="noreferrer">＋ Add to Google Calendar</a>
+      </section>
       <OwnerCalendar />
     </main>
   );
 }
+
