@@ -5,9 +5,9 @@ type Mail = { to: string | string[]; subject: string; html: string };
 const brandedHeader = `
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
     <tr>
-      <td align="center" style="padding:0 0 22px">
+      <td align="center" style="padding:14px 0 24px;background:#ffffff">
         <a href="https://vuesmi.com" style="text-decoration:none">
-          <img src="https://vuesmi.com/vues-farm-bell-192.png" width="64" height="64" alt="The Vues at Klinger Lake" style="display:block;width:64px;height:64px;margin:0 auto;border:0;border-radius:14px">
+          <img src="https://vuesmi.com/vues-farm-bell.svg" width="112" height="112" alt="Gold Purdue bell and yoke for The Vues at Klinger Lake" style="display:block;width:112px;height:112px;margin:0 auto;border:0;background:#ffffff">
         </a>
       </td>
     </tr>
