@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import { getDb } from "../../db";
 import { bookingRequests, dateBlocks } from "../../db/schema";
 
@@ -12,20 +12,20 @@ function icsDate(value: string) {
 
 export async function GET() {
   const db = getDb();
-  const [blocks, confirmed] = await Promise.all([
+  const [blocks, reserved] = await Promise.all([
     db.select().from(dateBlocks),
-    db.select().from(bookingRequests).where(eq(bookingRequests.status, "confirmed")),
+    db.select().from(bookingRequests).where(inArray(bookingRequests.status, ["approved", "confirmed"])),
   ]);
   const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
   const events = [
-    ...confirmed.map(booking => [
+    ...reserved.map(booking => [
       "BEGIN:VEVENT",
       `UID:booking-${booking.id}@vuesmi.com`,
       `DTSTAMP:${stamp}`,
       `DTSTART;VALUE=DATE:${icsDate(booking.arrival)}`,
       `DTEND;VALUE=DATE:${icsDate(booking.departure)}`,
-      "SUMMARY:The Vues — Confirmed stay",
-      "DESCRIPTION:Confirmed reservation at The Vues at Klinger Lake.",
+      `SUMMARY:The Vues — ${booking.status === "confirmed" ? "Confirmed" : "Approved"} stay`,
+      `DESCRIPTION:${booking.status === "confirmed" ? "Confirmed" : "Approved"} reservation at The Vues at Klinger Lake.`,
       "TRANSP:OPAQUE",
       "END:VEVENT",
     ].join("\r\n")),
