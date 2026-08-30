@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers";
 
-type Mail = { to: string | string[]; subject: string; html: string };
+export type Mail = { to: string | string[]; subject: string; html: string };
+export type MailRuntime = { RESEND_API_KEY?: string; MAIL_FROM?: string };
 
 const brandedHeader = `
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
@@ -49,7 +50,10 @@ function brandSubject(subject: string) {
 }
 
 export async function sendMail(message: Mail) {
-  const runtime = env as unknown as { RESEND_API_KEY?: string; MAIL_FROM?: string };
+  return sendMailWithRuntime(message,env as unknown as MailRuntime);
+}
+
+export async function sendMailWithRuntime(message:Mail,runtime:MailRuntime){
   if (!runtime.RESEND_API_KEY || !runtime.MAIL_FROM) return { sent: false, reason: "not_configured" } as const;
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
