@@ -23,18 +23,10 @@ export async function GET(){
 export async function POST(request:Request){
   const owner=await ownerOr401();if(!owner)return Response.json({error:"Unauthorized"},{status:401});
   try{
-    const body=await request.json() as {id?:number;action?:"approve"|"decline"|"confirm"|"copy"};
+    const body=await request.json() as {id?:number;action?:"approve"|"decline"|"confirm"};
     if(!body.id||!body.action)return Response.json({error:"Missing request or action."},{status:400});
     const db=getDb();const [booking]=await db.select().from(bookingRequests).where(eq(bookingRequests.id,body.id)).limit(1);
     if(!booking)return Response.json({error:"Request not found."},{status:404});
-    if(body.action==="copy"){
-      const declined=booking.status==="declined";
-      if(!declined&&booking.status!=="approved"&&booking.status!=="confirmed")return Response.json({error:"Only a reviewed request can be copied."},{status:409});
-      const subject=declined?`Copy: An update on your request for The Vues — ${booking.arrival}–${booking.departure}`:`Copy: Your stay at The Vues is approved — ${booking.arrival}–${booking.departure}`;
-      const html=declined?`<p>Hi ${escapeHtml(booking.name)},</p><p>Unfortunately, we can’t approve your requested stay from ${escapeHtml(booking.arrival)} through ${escapeHtml(booking.departure)}. No payment was taken.</p>`:approvalEmailHtml(booking);
-      await sendMail({to:owner.email.trim().toLowerCase(),subject,html});
-      return Response.json({status:"copied"});
-    }
     if(body.action==="confirm"){
       if(booking.status!=="approved")return Response.json({error:"Only an approved request can be confirmed."},{status:409});
       await db.update(bookingRequests).set({status:"confirmed"}).where(eq(bookingRequests.id,booking.id));
