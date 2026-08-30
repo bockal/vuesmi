@@ -38,13 +38,23 @@ function brandEmail(content: string) {
   </div>`;
 }
 
+function brandSubject(subject: string) {
+  if (subject.includes("The Vues at Klinger Lake")) return subject;
+  return subject
+    .replace("Paid and confirmed: Vues booking", "Paid and confirmed: The Vues at Klinger Lake booking")
+    .replace("New Vues request", "New request for The Vues at Klinger Lake")
+    .replace("Vues booking", "The Vues at Klinger Lake booking")
+    .replace("Vues request", "The Vues at Klinger Lake request")
+    .replaceAll("The Vues", "The Vues at Klinger Lake");
+}
+
 export async function sendMail(message: Mail) {
   const runtime = env as unknown as { RESEND_API_KEY?: string; MAIL_FROM?: string };
   if (!runtime.RESEND_API_KEY || !runtime.MAIL_FROM) return { sent: false, reason: "not_configured" } as const;
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { authorization: `Bearer ${runtime.RESEND_API_KEY}`, "content-type": "application/json" },
-    body: JSON.stringify({ from: runtime.MAIL_FROM, ...message, html: brandEmail(message.html) }),
+    body: JSON.stringify({ from: runtime.MAIL_FROM, ...message, subject: brandSubject(message.subject), html: brandEmail(message.html) }),
   });
   if (!response.ok) throw new Error(`Email provider returned ${response.status}`);
   return { sent: true } as const;
