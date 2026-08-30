@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { env } from "cloudflare:workers";
 import "./globals.css";
 export const metadata:Metadata={
   metadataBase:new URL("https://vuesmi.com"),
@@ -18,5 +19,8 @@ export const metadata:Metadata={
   openGraph:{title:"Klinger Lake Vacation Rental in Sturgis, MI | Sleeps 12 | The Vues",description:"A five-bedroom lakefront vacation rental with private shoreline, dock, kayaks and room for 12 guests.",type:"website",url:"https://vuesmi.com/",images:[{url:"/property/klinger-house-sketch-bw.webp",width:1536,height:1024,alt:"Architectural sketch of The Vues at Klinger Lake"}]},
   twitter:{card:"summary_large_image",title:"Klinger Lake Vacation Rental in Sturgis, MI | Sleeps 12 | The Vues",description:"A five-bedroom lakefront vacation rental with private shoreline, dock, kayaks and room for 12 guests.",images:["/property/klinger-house-sketch-bw.webp"]},
 };
-export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="en"><body>{children}</body></html>}
+export default function RootLayout({children}:{children:React.ReactNode}){
+  const measurementId=(env as unknown as {GA_MEASUREMENT_ID?:string}).GA_MEASUREMENT_ID;
+  return <html lang="en"><head>{measurementId&&<><script async src={`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}`}/><script dangerouslySetInnerHTML={{__html:`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}window.gtag=gtag;gtag('js',new Date());gtag('config',${JSON.stringify(measurementId)});`}}/></>}</head><body>{children}</body></html>
+}
 
