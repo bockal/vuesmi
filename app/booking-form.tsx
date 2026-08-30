@@ -1,6 +1,7 @@
 "use client";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { calculateQuote, MAX_GUESTS, MIN_NIGHTS, money } from "./pricing";
+import { trackEvent } from "./analytics";
 
 export default function BookingForm() {
   const [state,setState]=useState<"idle"|"sending"|"sent"|"error">("idle");
@@ -9,9 +10,12 @@ export default function BookingForm() {
   const [adults,setAdults]=useState(1),[children,setChildren]=useState(0);
   const [boatRental,setBoatRental]=useState(false),[pet,setPet]=useState(false);
   const quote=useMemo(()=>calculateQuote(arrival,departure,adults,children,boatRental,pet?1:0),[arrival,departure,adults,children,boatRental,pet]);
-  async function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();setState("sending");const form=new FormData(event.currentTarget);const response=await fetch("/api/booking-requests",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(Object.fromEntries(form.entries()))});const result=await response.json() as {error?:string};if(!response.ok){setMessage(result.error??"Please try again.");setState("error");return;}setState("sent");}
+  const started=useRef(false),displayedQuote=useRef("");
+  const startForm=()=>{if(started.current)return;started.current=true;trackEvent("form_started",{form_name:"booking_request"})};
+  useEffect(()=>{if(quote.nights<MIN_NIGHTS||quote.guests>MAX_GUESTS)return;const key=`${arrival}:${departure}:${adults}:${children}:${boatRental}:${pet}`;if(displayedQuote.current===key)return;displayedQuote.current=key;trackEvent("quote_displayed",{currency:"USD",value:quote.totalCents/100,nights:quote.nights,guests:quote.guests})},[quote,arrival,departure,adults,children,boatRental,pet]);
+  async function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();setState("sending");const form=new FormData(event.currentTarget);const response=await fetch("/api/booking-requests",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(Object.fromEntries(form.entries()))});const result=await response.json() as {id?:number;error?:string};if(!response.ok){setMessage(result.error??"Please try again.");setState("error");return;}trackEvent("request_submitted",{currency:"USD",value:quote.totalCents/100,nights:quote.nights,guests:quote.guests,request_id:result.id??0});setState("sent");}
   if(state==="sent")return <div className="success"><span>✓</span><h3>Your request is in.</h3><p>We emailed your quote and sent it to the owners for review. Nothing has been charged. If approved, you’ll receive confirmed dates, the amount due and your choice of payment options.</p><button onClick={()=>setState("idle")}>Request different dates</button></div>;
-  return <form className="bookingForm" onSubmit={submit}>
+  return <form className="bookingForm" onSubmit={submit} onFocusCapture={startForm}>
     <div className="two"><label>Arrival<input name="arrival" type="date" value={arrival} onChange={e=>setArrival(e.target.value)} required/></label><label>Departure<input name="departure" type="date" value={departure} onChange={e=>setDeparture(e.target.value)} required/></label></div>
     <div className="two"><label>Adults (13+)<input name="adults" type="number" min="1" max={MAX_GUESTS} value={adults} onChange={e=>setAdults(Number(e.target.value))} required/></label><label>Children (ages 0–12)<input name="children" type="number" min="0" max={MAX_GUESTS-1} value={children} onChange={e=>setChildren(Number(e.target.value))} required/></label></div>
     <label className="check addOn"><input name="boatRental" type="checkbox" value="yes" checked={boatRental} onChange={e=>setBoatRental(e.target.checked)}/><span><strong>Add pontoon / jet-ski rental</strong><small>$100 per day · Kayaks are included at no charge</small></span></label>
@@ -23,3 +27,4 @@ export default function BookingForm() {
     <p className="fine">Two-night minimum · 12 guests maximum · June–August peak pricing · 25% off other months.</p><div className="paymentOptions" aria-label="Payment options available after approval"><span className="zelleLogo">Zelle<sup>®</sup></span><a className="venmoLogo" href="https://venmo.com/u/KlingerLake68109" target="_blank" rel="noreferrer">Venmo</a></div><p className="paymentCaption">Zelle or Venmo details are provided after your dates are approved.</p>
   </form>;
 }
+
