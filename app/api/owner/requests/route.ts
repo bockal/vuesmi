@@ -28,8 +28,11 @@ export async function POST(request:Request){
     const db=getDb();const [booking]=await db.select().from(bookingRequests).where(eq(bookingRequests.id,body.id)).limit(1);
     if(!booking)return Response.json({error:"Request not found."},{status:404});
     if(body.action==="copy"){
-      if(booking.status!=="approved"&&booking.status!=="confirmed")return Response.json({error:"Only an approved or confirmed request can be copied."},{status:409});
-      await sendMail({to:owner.email.trim().toLowerCase(),subject:`Copy: Your stay at The Vues is approved — ${booking.arrival}–${booking.departure}`,html:approvalEmailHtml(booking)});
+      const declined=booking.status==="declined";
+      if(!declined&&booking.status!=="approved"&&booking.status!=="confirmed")return Response.json({error:"Only a reviewed request can be copied."},{status:409});
+      const subject=declined?`Copy: An update on your request for The Vues — ${booking.arrival}–${booking.departure}`:`Copy: Your stay at The Vues is approved — ${booking.arrival}–${booking.departure}`;
+      const html=declined?`<p>Hi ${escapeHtml(booking.name)},</p><p>Unfortunately, we can’t approve your requested stay from ${escapeHtml(booking.arrival)} through ${escapeHtml(booking.departure)}. No payment was taken.</p>`:approvalEmailHtml(booking);
+      await sendMail({to:owner.email.trim().toLowerCase(),subject,html});
       return Response.json({status:"copied"});
     }
     if(body.action==="confirm"){
