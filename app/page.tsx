@@ -2,7 +2,9 @@ import AvailabilityCalendar from "./availability-calendar";
 import BookingForm from "./booking-form";
 import "./listing.css";
 import "./instagram.css";
+import "./instagram-feed.css";
 import InstallApp from "./install-app";
+import InstagramFeed from "./instagram-feed";
 
 const GOOGLE_LISTING="https://maps.app.goo.gl/Q8psuLeMhAzbFGWGA";
 const amenities=[["≋","100 ft private shoreline"],["⚓","Private dock / pier"],["☀","1,021 sq ft lakeside deck"],["◒","Kayaks included"],["↝","Pontoon / jet-ski rental · $100/day"],["⌁","Firepit"],["◉","Lake views"],["⌂","Full kitchen with quartz counters"],["♨","Indoor fireplace"],["⌁","High-speed Wi-Fi"],["▣","Smart TVs"],["❄","Central air conditioning"],["♨","Heating"],["◫","Washer and dryer"],["◇","Water softener and filtration"],["⚡","Universal electric vehicle charger"],["P","2 driveway spaces · unlimited off-street parking"],["✓","Smoke and CO alarms"]];
@@ -53,12 +55,11 @@ export default function Home(){return <main>
     <section id="reviews" className="reviews"><div className="reviewsHead"><div><p className="googleG">G</p><h2>5.0 · 3 Google reviews</h2><p>Guest stories and photos from Klinger Lake.</p></div><a href={GOOGLE_LISTING} target="_blank" rel="noreferrer">Read the reviews on Google ↗</a></div><div className="reviewRail"><ReviewCard review={reviews[0]}/><ReviewPhoto src="/property/deck-view.jpg" alt="Darker evening lake view shared by Heather" caption="Guest photo shared by Heather"/><ReviewCard review={reviews[1]}/><ReviewPhoto src="/property/review-firepit.png" alt="Couple enjoying a lakeside fire at sunset" caption="Evenings made for the lake"/><ReviewCard review={reviews[2]}/><ReviewPhoto src="/property/review-kayaks.png" alt="Guests kayaking in Klinger Lake" caption="Kayaks are included with every stay"/></div></section>
     <section className="nearby" aria-labelledby="nearby-heading"><p className="eyebrow">Plan your stay</p><h2 id="nearby-heading">Things to Do Near Klinger Lake</h2><p className="sectionLead">Make the lake your home base for outdoor adventures, local shopping and memorable day trips across Southwest Michigan and Northern Indiana.</p><ol className="nearbyGrid">{nearby.map((item,index)=><li key={item.name}><span>{index+1}</span><div><h3>{item.name}</h3><p>{item.text}</p><a href={item.href} target="_blank" rel="noreferrer">Explore this area ↗</a></div></li>)}</ol></section>
     <section className="faq" aria-labelledby="faq-heading"><p className="eyebrow">Know before you go</p><h2 id="faq-heading">Frequently Asked Questions</h2><div className="faqList">{faqs.map(([question,answer])=><details key={question}><summary>{question}</summary><p>{answer}</p></details>)}</div></section>
-    <section className="photoGallery" aria-labelledby="photo-heading"><div className="photoGalleryHead"><div><p className="eyebrow">#TheVuesKlingerLake</p><h2 id="photo-heading">Photo Gallery</h2><p>Swipe through lake days, gathering spaces and favorite views from The Vues.</p></div><a href="#request">Request your stay ↑</a></div><div className="instagramRail">{photos.map(([src,caption])=><figure key={src}><img src={src} alt={caption} loading="lazy"/><figcaption><span className="miniBell">P</span><div><strong>The Vues at Klinger Lake</strong><p>{caption}</p></div></figcaption></figure>)}</div></section>
+    <section className="photoGallery" aria-labelledby="photo-heading"><div className="photoGalleryHead"><div><p className="eyebrow">A daily Instagram timehop</p><h2 id="photo-heading">#klingerlake Through the Years</h2><p>Five public #klingerlake photos from this day in years past. While the archive grows, the gallery falls back to the newest eligible posts and favorite views from The Vues.</p></div><a href="https://www.instagram.com/explore/tags/klingerlake/" target="_blank" rel="noreferrer">View #klingerlake on Instagram ↗</a></div><InstagramFeed fallback={photos}/></section>
   </div>
   <footer><div className="brand">THE VUES</div><p>Klinger Lake · Sturgis, Michigan</p><div className="footerActions"><InstallApp/><a href="/house-rules">Guest rules &amp; water safety</a><a href="/owner">Owner calendar</a></div></footer>
 </main>}
 
 function ReviewCard({review}:{review:{name:string;text:string}}){return <article className="reviewCard"><span>★★★★★</span><blockquote>“{review.text}”</blockquote><h3>{review.name}</h3><a href={GOOGLE_LISTING} target="_blank" rel="noreferrer">Verified on Google ↗</a></article>}
 function ReviewPhoto({src,alt,caption}:{src:string;alt:string;caption:string}){return <figure className="reviewPhoto"><img src={src} alt={alt}/><figcaption>{caption}</figcaption></figure>}
-
 
