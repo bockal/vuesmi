@@ -12,7 +12,9 @@
     "head_sampling_rate": 1
   },
   "vars": {
-    "GA_MEASUREMENT_ID": "G-H6N4PTB97N"
+    "GA_MEASUREMENT_ID": "G-H6N4PTB97N",
+    "INSTAGRAM_USER_ID": "17841478046882734",
+    "INSTAGRAM_HASHTAG_ID": "17842560763026017"
   },
   "assets": {
     "directory": "./dist/client",
@@ -31,4 +33,3 @@
     }
   ]
 }
-
