@@ -14,9 +14,6 @@ interface Env {
     };
   };
   GA_MEASUREMENT_ID?: string;
-  INSTAGRAM_ACCESS_TOKEN?: string;
-  INSTAGRAM_USER_ID?: string;
-  INSTAGRAM_HASHTAG_ID?: string;
   RESEND_API_KEY?: string;
   MAIL_FROM?: string;
 }
@@ -24,56 +21,6 @@ interface Env {
 interface ExecutionContext {
   waitUntil(promise: Promise<unknown>): void;
   passThroughOnException(): void;
-}
-
-type InstagramMedia={id:string;caption?:string;media_type:string;media_url?:string;permalink:string;thumbnail_url?:string;timestamp?:string};
-
-async function instagramFeed(request:Request,env:Env,ctx:ExecutionContext){
-  if(!env.INSTAGRAM_ACCESS_TOKEN||!env.INSTAGRAM_USER_ID||!env.INSTAGRAM_HASHTAG_ID){
-    return Response.json({items:[]},{status:503,headers:{"Cache-Control":"no-store"}});
-  }
-
-  const cache=caches.default;
-  const cacheKey=new Request(new URL("/api/instagram-feed",request.url),{method:"GET"});
-  const cached=await cache.match(cacheKey);
-  if(cached)return cached;
-
-  const fields="id,caption,media_type,media_url,permalink,thumbnail_url,timestamp";
-  const endpoint=(kind:"recent_media"|"top_media")=>{
-    const url=new URL(`https://graph.facebook.com/v26.0/${env.INSTAGRAM_HASHTAG_ID}/${kind}`);
-    url.searchParams.set("user_id",env.INSTAGRAM_USER_ID!);
-    url.searchParams.set("fields",fields);
-    url.searchParams.set("limit","25");
-    url.searchParams.set("access_token",env.INSTAGRAM_ACCESS_TOKEN!);
-    return url;
-  };
-
-  try{
-    const read=async(kind:"recent_media"|"top_media")=>{
-      const response=await fetch(endpoint(kind),{headers:{Accept:"application/json"}});
-      if(!response.ok)throw new Error(`Instagram ${kind} returned ${response.status}`);
-      const payload=await response.json() as {data?:InstagramMedia[]};
-      return payload.data??[];
-    };
-    const [recent,top]=await Promise.all([read("recent_media"),read("top_media")]);
-    const discovered=new Map<string,InstagramMedia>();
-    for(const item of [...recent,...top])if(item.permalink&&(item.media_url||item.thumbnail_url))discovered.set(item.id,item);
-
-    if(discovered.size){
-      const statements=[...discovered.values()].map(item=>env.DB.prepare("INSERT INTO instagram_hashtag_media (id, caption, image_url, permalink, posted_at, last_seen_at) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET caption=excluded.caption, image_url=excluded.image_url, permalink=excluded.permalink, posted_at=excluded.posted_at, last_seen_at=CURRENT_TIMESTAMP").bind(item.id,item.caption?.slice(0,500)??"",item.media_type==="VIDEO"?item.thumbnail_url:item.media_url,item.permalink,item.timestamp??new Date().toISOString()));
-      await env.DB.batch(statements);
-    }
-
-    const today=new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York",month:"2-digit",day:"2-digit"}).format(new Date()).split("-").slice(-2).join("-");
-    const timehop=await env.DB.prepare("SELECT id, caption, image_url AS imageUrl, permalink, posted_at AS timestamp FROM instagram_hashtag_media WHERE substr(posted_at, 6, 5) = ? ORDER BY posted_at DESC LIMIT 5").bind(today).all();
-    const fallback=timehop.results.length?timehop:await env.DB.prepare("SELECT id, caption, image_url AS imageUrl, permalink, posted_at AS timestamp FROM instagram_hashtag_media ORDER BY posted_at DESC LIMIT 5").all();
-    const response=Response.json({items:fallback.results,timehop:timehop.results.length>0},{headers:{"Cache-Control":"public, max-age=300, s-maxage=900","X-Content-Type-Options":"nosniff"}});
-    ctx.waitUntil(cache.put(cacheKey,response.clone()));
-    return response;
-  }catch(error){
-    console.error(JSON.stringify({event:"instagram_feed_failed",error:error instanceof Error?error.message:"unknown"}));
-    return Response.json({items:[]},{status:502,headers:{"Cache-Control":"no-store"}});
-  }
 }
 
 function easternDateThreshold(now=new Date()){
@@ -114,8 +61,6 @@ const worker = {
         },
       }, allowedWidths);
     }
-
-    if(url.pathname==="/api/instagram-feed"&&request.method==="GET")return instagramFeed(request,env,ctx);
 
     return handler.fetch(request, env, ctx);
   },
