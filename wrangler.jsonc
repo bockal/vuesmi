@@ -12,7 +12,8 @@
     "head_sampling_rate": 1
   },
   "vars": {
-    "GA_MEASUREMENT_ID": "G-H6N4PTB97N",  },
+    "GA_MEASUREMENT_ID": "G-H6N4PTB97N"
+  },
   "assets": {
     "directory": "./dist/client",
     "binding": "ASSETS",
