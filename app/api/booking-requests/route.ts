@@ -1,7 +1,7 @@
 import { and, eq, gt, lt } from "drizzle-orm";
 import { getDb } from "../../../db";
 import { bookingRequests, dateBlocks } from "../../../db/schema";
-import { calculateQuote, MAX_GUESTS, MIN_NIGHTS, money } from "../../pricing";
+import { calculateQuote, MAX_GUESTS, MAX_NIGHTS, MIN_NIGHTS, money } from "../../pricing";
 import { escapeHtml, sendMail } from "../../email";
 import { sendBookingPush } from "../../push";
 import { createCancellationToken } from "../../cancel-token";
@@ -18,6 +18,7 @@ export async function POST(request:Request){
     const quote=calculateQuote(p.arrival,p.departure,adults,children,boatRental,pets);
     if(quote.guests>MAX_GUESTS)return Response.json({error:`The Vues accommodates up to ${MAX_GUESTS} guests.`},{status:400});
     if(quote.nights<MIN_NIGHTS)return Response.json({error:`Please select at least ${MIN_NIGHTS} nights.`},{status:400});
+    if(quote.nights>MAX_NIGHTS)return Response.json({error:`Please select no more than ${MAX_NIGHTS} nights per stay.`},{status:400});
     const db=getDb();
     const [blocks,reserved]=await Promise.all([
       db.select({id:dateBlocks.id}).from(dateBlocks).where(and(lt(dateBlocks.startDate,p.departure),gt(dateBlocks.endDate,p.arrival))).limit(1),
@@ -35,6 +36,8 @@ export async function POST(request:Request){
       sendMail({to:p.email.trim().toLowerCase(),subject:`Your date request for The Vues: ${p.arrival}–${p.departure}`,html:`<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#222"><h2 style="color:#173f3a">Thanks, ${safeName}.</h2><p>We received your request for The Vues at Klinger Lake.</p><table style="width:100%;border-collapse:collapse;margin:24px 0"><tr><td style="padding:12px;border:1px solid #ddd"><strong>Arrival</strong><br>${escapeHtml(p.arrival)}</td><td style="padding:12px;border:1px solid #ddd"><strong>Departure</strong><br>${escapeHtml(p.departure)}</td></tr></table><p>${escapeHtml(detail)}, including a ${money(quote.cleaningCents)} cleaning fee${pets?`, ${money(quote.petCents)} pet fee`:""}${boatRental?`, ${money(quote.boatRentalCents)} boat rental`:""}, and ${money(quote.taxCents)} Michigan lodging tax.</p><p>Nothing has been charged. If the owners approve your stay, we’ll email Zelle and Venmo payment options.</p><p style="margin-top:32px"><a href="${cancelUrl}" style="display:inline-block;background:#8b2f2f;color:white;text-decoration:none;padding:13px 18px;border-radius:7px;font-weight:bold">Cancel this request</a></p><p style="font-size:12px;color:#666">Only use this button if your plans change and you want to withdraw the request.</p></div>`}),
     ]);
     return Response.json({id:booking.id,quote},{status:201});
-  }catch(error){\r\n    console.error("booking_request_failed",error);\r\n    return Response.json({error:"We couldn’t save your request. Please try again."},{status:500});\r\n  }
+  }catch(error){
+    console.error("booking_request_failed",error);
+    return Response.json({error:"We couldn’t save your request. Please try again."},{status:500});
+  }
 }
-
