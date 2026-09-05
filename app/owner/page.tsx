@@ -2,25 +2,13 @@ import { getAuthorizedOwner } from "../owner-auth";
 import OwnerCalendar from "./owner-calendar";
 import Link from "next/link";
 import PushNotifications from "./push-notifications";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 export default async function OwnerPage() {
   const owner = await getAuthorizedOwner();
-  if (!owner) {
-    return (
-      <main className="ownerShell">
-        <div className="ownerDenied">
-          <h1>Owner access isn’t configured</h1>
-          <p>
-            Sign in through Cloudflare Access using bockal@gmail.com or
-            bockda@gmail.com.
-          </p>
-          <Link href="/">Return to listing</Link>
-        </div>
-      </main>
-    );
-  }
+  if (!owner) redirect("/owner/login");
 
   const feed = "https://vuesmi.com/calendar.ics";
   const googleCalendar = `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(feed)}`;
@@ -32,7 +20,7 @@ export default async function OwnerPage() {
           <Link href="/" className="brand">THE VUES</Link>
           <p>Bookings &amp; calendar</p>
         </div>
-        <a href="/cdn-cgi/access/logout">Sign out</a>
+        <Link href="/owner/logout">Sign out</Link>
       </header>
       <PushNotifications />
       <section className="calendarSync">
@@ -47,4 +35,3 @@ export default async function OwnerPage() {
     </main>
   );
 }
-
