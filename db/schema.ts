@@ -10,7 +10,6 @@ export const dateBlocks=sqliteTable("date_blocks",{
   createdAt:text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
-
 export const pushSubscriptions=sqliteTable("push_subscriptions",{
   id:integer("id").primaryKey({autoIncrement:true}),
   ownerEmail:text("owner_email").notNull(),
@@ -20,3 +19,12 @@ export const pushSubscriptions=sqliteTable("push_subscriptions",{
   createdAt:text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
+export const ownerAuthTokens=sqliteTable("owner_auth_tokens",{
+  id:integer("id").primaryKey({autoIncrement:true}),
+  email:text("email").notNull(),
+  tokenHash:text("token_hash").notNull().unique(),
+  kind:text("kind").notNull(),
+  expiresAt:text("expires_at").notNull(),
+  usedAt:text("used_at"),
+  createdAt:text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
