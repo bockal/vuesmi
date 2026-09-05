@@ -1,5 +1,6 @@
 export const MAX_GUESTS = 12;
 export const MIN_NIGHTS = 2;
+export const MAX_NIGHTS = 10;
 export const FIRST_GUEST_NIGHTLY_CENTS = 19_900;
 export const ADDITIONAL_GUEST_NIGHTLY_CENTS = 5_000;
 export const CHILD_NIGHTLY_CENTS = 2_500;
