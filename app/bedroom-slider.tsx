@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useRef,useState } from "react";
+import {trackEvent} from "./analytics";
 
 const bedrooms = [
   { src: "/bedrooms/master-bedroom.jpg", name: "Master bedroom", beds: "1 king bed", sleeps: "Sleeps 2" },
@@ -12,8 +13,12 @@ const bedrooms = [
 
 export default function BedroomSlider() {
   const [active, setActive] = useState(0);
+  const opened=useRef(false);
   const bedroom = bedrooms[active];
-  const show = (index: number) => setActive((index + bedrooms.length) % bedrooms.length);
+  const show = (index: number) => {
+    if(!opened.current){opened.current=true;trackEvent("photo_gallery_open",{gallery:"bedrooms"})}
+    setActive((index + bedrooms.length) % bedrooms.length);
+  };
 
   return <section className="bedroomSection" aria-labelledby="bedrooms-heading">
     <div className="bedroomHeading">

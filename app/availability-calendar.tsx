@@ -1,5 +1,6 @@
 "use client";
-import { useEffect,useMemo,useState } from "react";
+import { useEffect,useMemo,useRef,useState } from "react";
+import {trackEvent} from "./analytics";
 
 type Range={id:number;start:string;end:string;label:string;type:string};
 const fmt=(d:Date)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
@@ -15,7 +16,9 @@ function Month({base,ranges}:{base:Date;ranges:Range[]}){
 }
 export default function AvailabilityCalendar(){
   const [ranges,setRanges]=useState<Range[]>([]),[offset,setOffset]=useState(0);
+  const wrapper=useRef<HTMLDivElement>(null);
   useEffect(()=>{fetch("/api/availability",{cache:"no-store"}).then(r=>r.json()).then(d=>setRanges(d.ranges??[])).catch(()=>setRanges([]))},[]);
+  useEffect(()=>{const element=wrapper.current;if(!element)return;const observer=new IntersectionObserver(entries=>{if(!entries.some(entry=>entry.isIntersecting))return;trackEvent("view_availability",{section:"availability_calendar"});observer.disconnect()},{threshold:.35});observer.observe(element);return()=>observer.disconnect()},[]);
   const months=useMemo(()=>[0,1].map(n=>new Date(new Date().getFullYear(),new Date().getMonth()+offset+n,1)),[offset]);
-  return <div className="calendarWrap"><div className="calendarTop"><div><h2>Check availability</h2><p>Crossed-out dates—including confirmed bookings—are unavailable. Available dates may be requested, not instantly booked.</p></div><div className="calendarNav"><button onClick={()=>setOffset(v=>Math.max(0,v-1))} disabled={offset===0} aria-label="Previous months">‹</button><button onClick={()=>setOffset(v=>v+1)} aria-label="Next months">›</button></div></div><div className="months">{months.map(m=><Month key={m.toISOString()} base={m} ranges={ranges}/>)}</div><div className="legend"><span><i/>Available</span><span><i className="unavailable"/>Unavailable / booked</span></div></div>;
+  return <div className="calendarWrap" ref={wrapper}><div className="calendarTop"><div><h2>Check availability</h2><p>Crossed-out dates—including confirmed bookings—are unavailable. Available dates may be requested, not instantly booked.</p></div><div className="calendarNav"><button onClick={()=>setOffset(v=>Math.max(0,v-1))} disabled={offset===0} aria-label="Previous months">‹</button><button onClick={()=>setOffset(v=>v+1)} aria-label="Next months">›</button></div></div><div className="months">{months.map(m=><Month key={m.toISOString()} base={m} ranges={ranges}/>)}</div><div className="legend"><span><i/>Available</span><span><i className="unavailable"/>Unavailable / booked</span></div></div>;
 }

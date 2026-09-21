@@ -10,7 +10,6 @@ const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === "seatbelt";
 
 const localBindingConfig = {
   main: "./worker/index.ts",
-  compatibility_flags: ["nodejs_compat"],
   // D1 is declared in wrangler.jsonc. Declaring it here as well makes the
   // production config contain the DB binding twice.
   d1_databases: [],

@@ -2,7 +2,7 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "vuesmi",
   "main": "./worker/index.ts",
-  "compatibility_date": "2026-08-25",
+  "compatibility_date": "2026-05-22",
   "compatibility_flags": ["nodejs_compat"],
   "triggers": {
     "crons": ["0 * * * *"]
@@ -12,7 +12,7 @@
     "head_sampling_rate": 1
   },
   "vars": {
-    "GA_MEASUREMENT_ID": "G-H6N4PTB97N"
+    "GA_MEASUREMENT_ID": "G-VV1S1RMN3C"
   },
   "assets": {
     "directory": "./dist/client",

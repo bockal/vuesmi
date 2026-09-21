@@ -62,7 +62,11 @@ const worker = {
       }, allowedWidths);
     }
 
-    return handler.fetch(request, env, ctx);
+    const response=await handler.fetch(request, env, ctx);
+    const measurementId=env.GA_MEASUREMENT_ID;
+    if(!response.headers.get("content-type")?.startsWith("text/html")||!measurementId||!/^G-[A-Z0-9]+$/.test(measurementId))return response;
+    const analytics=`<script async src="https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}window.gtag=gtag;gtag('js',new Date());gtag('config',${JSON.stringify(measurementId)});</script>`;
+    return new HTMLRewriter().on("head",{element(element){element.prepend(analytics,{html:true})}}).transform(response);
   },
   async scheduled(_controller:ScheduledController,env:Env,ctx:ExecutionContext){
     ctx.waitUntil(sendReviewFollowups(env));

@@ -5,6 +5,8 @@ export const metadata:Metadata={
   title:"House, Water & Pet Rules | The Vues at Klinger Lake",
   description:"Guest pet rules, Klinger Lake water safety requirements, check-in details and house rules for The Vues at Klinger Lake.",
   alternates:{canonical:"https://vuesmi.com/house-rules"},
+  openGraph:{title:"House, Water & Pet Rules | The Vues at Klinger Lake",description:"Guest pet rules, Klinger Lake water safety requirements, check-in details and house rules for The Vues at Klinger Lake.",type:"website",url:"https://vuesmi.com/house-rules",images:[{url:"/property/klinger-house-sketch-bw.webp",width:1536,height:1024,alt:"Architectural sketch of The Vues at Klinger Lake"}]},
+  twitter:{card:"summary_large_image",title:"House, Water & Pet Rules | The Vues at Klinger Lake",description:"Guest pet rules, Klinger Lake water safety requirements, check-in details and house rules for The Vues at Klinger Lake.",images:["/property/klinger-house-sketch-bw.webp"]},
 };
 
 export default function HouseRules(){return <main className="rulesPage">
