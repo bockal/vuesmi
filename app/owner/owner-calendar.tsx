@@ -45,7 +45,18 @@ export default function OwnerCalendar(){
   }
   async function cancelReservation(id:number){
     if(!window.confirm("Cancel this reservation and release its dates on the calendar?"))return;
-    await review(id,"cancel");
+    setWorking(id);setError("");
+    try{
+      const r=await fetch("/owner/api/requests",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({id,action:"cancel"})});
+      const d=await r.json() as {error?:string};
+      if(!r.ok){setError(d.error??"Could not cancel reservation");return}
+      setRequests(current=>current.map(item=>item.id===id?{...item,status:"canceled"}:item));
+      await load();
+    }catch{
+      setError("Could not cancel reservation. Please try again.");
+    }finally{
+      setWorking(null);
+    }
   }
 
   return <>
