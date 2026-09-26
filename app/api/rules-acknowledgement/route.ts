@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { ensureBookingRequestSchema } from "../../../db/ensure-schema";
 import { getDb } from "../../../db";
 import { bookingRequests } from "../../../db/schema";
 import { escapeHtml, sendMail } from "../../email";
@@ -25,6 +26,7 @@ function rulesHtml() {
 
 export async function POST(request: Request) {
   try {
+    await ensureBookingRequestSchema();
     const p = (await request.json()) as {
       id?: number;
       token?: string;
