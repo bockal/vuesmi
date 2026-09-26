@@ -67,7 +67,7 @@ export default function OwnerCalendar(){
                 <span>Deposit <strong>✓ received</strong></span>
                 <span>House rules <strong className={r.rulesAcknowledgedAt?"done":"pending"}>{r.rulesAcknowledgedAt?`✓ signed ${new Date(r.rulesAcknowledgedAt).toLocaleDateString()}`:"⏳ awaiting signature"}</strong></span>
                 {r.rulesAcknowledgedName&&<small>Signed by {r.rulesAcknowledgedName}{r.rulesVersion?` · version ${r.rulesVersion}`:""}</small>}
-                <span>Remaining balance <strong>{usd(balance)}</strong></span>
+                <span>Balance after requested deposit <strong>{usd(balance)}</strong></span>
               </div>}
 
             {r.status==="requested"&&
