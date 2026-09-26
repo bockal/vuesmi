@@ -1,4 +1,5 @@
 import { and, eq, gt, lt } from "drizzle-orm";
+import { ensureBookingRequestSchema } from "../../../db/ensure-schema";
 import { getDb } from "../../../db";
 import { bookingRequests, dateBlocks } from "../../../db/schema";
 import { calculateQuote, MAX_GUESTS, MAX_NIGHTS, MIN_NIGHTS, money } from "../../pricing";
@@ -8,6 +9,7 @@ import { createCancellationToken } from "../../cancel-token";
 
 export async function POST(request:Request){
   try{
+  await ensureBookingRequestSchema();
     const p=await request.json() as Record<string,string>;
     const required=["arrival","departure","name","email","phone","agreement"];
     if(required.some(k=>!p[k]?.trim()))return Response.json({error:"Please complete every required field."},{status:400});
