@@ -50,3 +50,5 @@ html,body{max-width:100%;overflow-x:hidden}
   .storyArchiveRail .storyPhoto{height:385px}
   .storyFinale{min-height:720px}
 }
+
+.reviewPhoto figcaption a{color:#fff;text-decoration:underline;text-underline-offset:3px}
