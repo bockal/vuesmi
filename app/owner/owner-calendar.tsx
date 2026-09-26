@@ -27,7 +27,14 @@ export default function OwnerCalendar(){
     if(!r.ok){setError(d.error??"Could not block dates");return}
     e.currentTarget.reset();load();
   }
-  async function remove(id:number){await fetch(`/owner/api/blocks?id=${id}`,{method:"DELETE"});load()}
+  async function remove(id:number){
+    if(!window.confirm("Remove this blocked date and make it available to guests?"))return;
+    setError("");
+    const r=await fetch("/owner/api/blocks",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action:"remove",id})});
+    const d=await r.json() as {error?:string};
+    if(!r.ok){setError(d.error??"Could not remove blocked dates");return}
+    await load();
+  }
   async function review(id:number,action:Action){
     setWorking(id);setError("");
     const r=await fetch("/owner/api/requests",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({id,action})});
