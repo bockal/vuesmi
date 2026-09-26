@@ -7,6 +7,7 @@ export async function GET(){
   <url>
     <loc>https://vuesmi.com/</loc>
     <lastmod>${lastmod}</lastmod>
+    ${["/bedrooms/master-bedroom.jpg","/property/bathroom-1.jpg","/property/bathroom-2.jpg","/property/open-living-dining.jpg"].map(src=>`<image:image><image:loc>https://vuesmi.com${src}</image:loc></image:image>`).join("\n    ")}
     ${lakeLifeStoryImages.map(({src})=>`<image:image><image:loc>https://vuesmi.com${src}</image:loc></image:image>`).join("\n    ")}
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
