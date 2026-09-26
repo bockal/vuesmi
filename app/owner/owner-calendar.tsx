@@ -2,9 +2,14 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 
 type Block={id:number;startDate:string;endDate:string;label:string};
-type Booking={id:number;arrival:string;departure:string;adults:number;children:number;boatRental:boolean;name:string;email:string;phone:string;note:string;status:string;quoteCents:number|null};
-type Action="approve"|"decline"|"confirm"|"cancel";
+type Booking={
+  id:number;arrival:string;departure:string;adults:number;children:number;boatRental:boolean;
+  name:string;email:string;phone:string;note:string;status:string;quoteCents:number|null;
+  rulesAcknowledgedAt:string|null;rulesAcknowledgedName:string|null;rulesVersion:string|null;
+};
+type Action="approve"|"decline"|"confirm"|"cancel"|"send-rules";
 const usd=(c:number|null)=>c==null?"Quote pending":new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(c/100);
+const requestedDeposit=(total:number|null)=>total==null?null:Math.min(total,Math.max(25_000,Math.round(total*.30)));
 
 export default function OwnerCalendar(){
   const [blocks,setBlocks]=useState<Block[]>([]);
@@ -37,21 +42,72 @@ export default function OwnerCalendar(){
 
   return <>
     <section className="requestPanel">
-      <div><p className="eyebrow">Request inbox</p><h1>Booking requests</h1><p>Approve a request to email the quote and Zelle/Venmo options. Mark the deposit received to confirm the stay and block its dates.</p></div>
+      <div>
+        <p className="eyebrow">Request inbox</p>
+        <h1>Booking requests</h1>
+        <p>Approve a request to email the quote and Zelle/Venmo options. Mark the deposit received to confirm the stay, block its dates, and automatically send the secure guest-agreement link.</p>
+      </div>
       {error&&<p className="formError">{error}</p>}
-      <div className="requestList">{requests.length===0?<p>No requests yet.</p>:requests.map(r=><article className="requestCard" key={r.id}>
-        <div className="requestDates"><strong>{r.arrival} → {r.departure}</strong><span className={`status status-${r.status}`}>{r.status}</span></div>
-        <h3>{r.name}</h3><p>{r.adults+r.children} guests · {usd(r.quoteCents)}{r.boatRental?" · Boat rental requested":""}</p>
-        <p><a href={`mailto:${r.email}`}>{r.email}</a> · <a href={`tel:${r.phone}`}>{r.phone}</a></p>{r.note&&<p className="requestNote">“{r.note}”</p>}
-        {r.status==="requested"&&<div className="reviewActions"><button disabled={working===r.id} onClick={()=>review(r.id,"approve")}>{working===r.id?"Working…":"Approve & email payment options"}</button><button className="secondary" disabled={working===r.id} onClick={()=>review(r.id,"decline")}>Decline</button></div>}
-        {r.status==="approved"&&<div className="reviewActions"><button disabled={working===r.id} onClick={()=>review(r.id,"confirm")}>{working===r.id?"Working…":"Mark deposit received"}</button><button className="secondary" disabled={working===r.id} onClick={()=>cancelReservation(r.id)}>Cancel reservation</button></div>}
-        {r.status==="confirmed"&&<div className="reviewActions"><button className="secondary" disabled={working===r.id} onClick={()=>cancelReservation(r.id)}>{working===r.id?"Working…":"Cancel reservation"}</button></div>}
-      </article>)}</div>
+      <div className="requestList">
+        {requests.length===0?<p>No requests yet.</p>:requests.map(r=>{
+          const deposit=requestedDeposit(r.quoteCents);
+          const balance=r.quoteCents==null||deposit==null?null:Math.max(0,r.quoteCents-deposit);
+          return <article className="requestCard" key={r.id}>
+            <div className="requestDates">
+              <strong>{r.arrival} → {r.departure}</strong>
+              <span className={`status status-${r.status}`}>{r.status}</span>
+            </div>
+            <h3>{r.name}</h3>
+            <p>{r.adults+r.children} guests · {usd(r.quoteCents)}{r.boatRental?" · Boat rental requested":""}</p>
+            <p><a href={`mailto:${r.email}`}>{r.email}</a> · <a href={`tel:${r.phone}`}>{r.phone}</a></p>
+            {r.note&&<p className="requestNote">“{r.note}”</p>}
+
+            {r.status==="confirmed"&&
+              <div className="bookingChecklist">
+                <span>Deposit <strong>✓ received</strong></span>
+                <span>House rules <strong className={r.rulesAcknowledgedAt?"done":"pending"}>{r.rulesAcknowledgedAt?`✓ signed ${new Date(r.rulesAcknowledgedAt).toLocaleDateString()}`:"⏳ awaiting signature"}</strong></span>
+                {r.rulesAcknowledgedName&&<small>Signed by {r.rulesAcknowledgedName}{r.rulesVersion?` · version ${r.rulesVersion}`:""}</small>}
+                <span>Remaining balance <strong>{usd(balance)}</strong></span>
+              </div>}
+
+            {r.status==="requested"&&
+              <div className="reviewActions">
+                <button disabled={working===r.id} onClick={()=>review(r.id,"approve")}>{working===r.id?"Working…":"Approve & email payment options"}</button>
+                <button className="secondary" disabled={working===r.id} onClick={()=>review(r.id,"decline")}>Decline</button>
+              </div>}
+
+            {r.status==="approved"&&
+              <div className="reviewActions">
+                <button disabled={working===r.id} onClick={()=>review(r.id,"confirm")}>{working===r.id?"Working…":"Mark deposit received"}</button>
+                <button className="secondary" disabled={working===r.id} onClick={()=>cancelReservation(r.id)}>Cancel reservation</button>
+              </div>}
+
+            {r.status==="confirmed"&&
+              <div className="reviewActions">
+                {!r.rulesAcknowledgedAt&&<button disabled={working===r.id} onClick={()=>review(r.id,"send-rules")}>{working===r.id?"Sending…":"Send / resend rules link"}</button>}
+                <button className="secondary" disabled={working===r.id} onClick={()=>cancelReservation(r.id)}>{working===r.id?"Working…":"Cancel reservation"}</button>
+              </div>}
+          </article>
+        })}
+      </div>
     </section>
+
     <div className="ownerGrid">
-      <section><p className="eyebrow">Availability controls</p><h2>Block dates</h2><p>Add personal stays, maintenance windows, or any period guests should see as unavailable.</p><form onSubmit={add} className="blockForm"><label>From<input type="date" name="start" required/></label><label>Through<input type="date" name="end" required/></label><label className="full">Reason<input name="label" placeholder="Family stay, maintenance…"/></label><button className="full">Block these dates</button></form></section>
-      <section className="blockList"><h2>Upcoming blocked dates</h2>{blocks.length===0?<p>No owner blocks yet.</p>:blocks.sort((a,b)=>a.startDate.localeCompare(b.startDate)).map(b=><article key={b.id}><div><strong>{b.label}</strong><span>{new Date(`${b.startDate}T12:00:00`).toLocaleDateString()} – {new Date(`${b.endDate}T12:00:00`).toLocaleDateString()}</span></div><button onClick={()=>remove(b.id)}>Remove</button></article>)}</section>
+      <section>
+        <p className="eyebrow">Availability controls</p>
+        <h2>Block dates</h2>
+        <p>Add personal stays, maintenance windows, or any period guests should see as unavailable.</p>
+        <form onSubmit={add} className="blockForm">
+          <label>From<input type="date" name="start" required/></label>
+          <label>Through<input type="date" name="end" required/></label>
+          <label className="full">Reason<input name="label" placeholder="Family stay, maintenance…"/></label>
+          <button className="full">Block these dates</button>
+        </form>
+      </section>
+      <section className="blockList">
+        <h2>Upcoming blocked dates</h2>
+        {blocks.length===0?<p>No owner blocks yet.</p>:blocks.sort((a,b)=>a.startDate.localeCompare(b.startDate)).map(b=><article key={b.id}><div><strong>{b.label}</strong><span>{new Date(`${b.startDate}T12:00:00`).toLocaleDateString()} – {new Date(`${b.endDate}T12:00:00`).toLocaleDateString()}</span></div><button onClick={()=>remove(b.id)}>Remove</button></article>)}
+      </section>
     </div>
   </>;
 }
-
