@@ -1,5 +1,13 @@
 import type { Metadata } from "next";
+import { eq } from "drizzle-orm";
 import "../listing.css";
+import { getDb } from "../../db";
+import { bookingRequests } from "../../db/schema";
+import AcknowledgementForm from "./acknowledgement-form";
+import { RULES_VERSION, RULE_SECTIONS } from "./rules-content";
+import { hashRulesToken } from "../rules-token";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "House Rules & Water Safety | The Vues at Klinger Lake",
@@ -30,7 +38,53 @@ export const metadata: Metadata = {
   },
 };
 
-export default function HouseRules() {
+type SearchParams = Promise<{ id?: string; token?: string }>;
+
+export default async function HouseRules({ searchParams }: { searchParams: SearchParams }) {
+  const params = await searchParams;
+  const id = Number(params.id);
+  const token = params.token ?? "";
+
+  let acknowledgement:
+    | {
+        id: number;
+        name: string;
+        email: string;
+        signedAt: string | null;
+        signedName: string | null;
+        version: string | null;
+      }
+    | null = null;
+  let invalidAcknowledgementLink = false;
+
+  if (Number.isInteger(id) && id > 0 && token) {
+    const db = getDb();
+    const [booking] = await db
+      .select()
+      .from(bookingRequests)
+      .where(eq(bookingRequests.id, id))
+      .limit(1);
+
+    const tokenHash = await hashRulesToken(token);
+    if (
+      booking &&
+      booking.status === "confirmed" &&
+      booking.rulesTokenHash &&
+      booking.rulesTokenHash === tokenHash
+    ) {
+      acknowledgement = {
+        id: booking.id,
+        name: booking.name,
+        email: booking.email,
+        signedAt: booking.rulesAcknowledgedAt,
+        signedName: booking.rulesAcknowledgedName,
+        version: booking.rulesVersion,
+      };
+    } else {
+      invalidAcknowledgementLink = true;
+    }
+  }
+
   return (
     <main className="rulesPage">
       <header className="rulesNav">
@@ -48,151 +102,74 @@ export default function HouseRules() {
       </section>
 
       <div className="rulesGrid">
-        <section>
-          <span className="ruleNumber">01</span>
-          <h2>Your stay</h2>
-          <ul>
-            <li>Maximum occupancy is 12 registered guests.</li>
-            <li>No parties or events without written owner approval.</li>
-            <li>Check-in is after 4:00 p.m.; check-out is by 10:00 a.m.</li>
-            <li>
-              Quiet hours are 10:00 p.m.–8:00 a.m. Please respect our neighbors
-              and keep outdoor sound low.
-            </li>
-            <li>No smoking or vaping indoors.</li>
-            <li>
-              Park up to two vehicles in the driveway. Additional off-street
-              parking is available; please keep access routes clear.
-            </li>
-            <li>
-              Any exception to these policies must be approved by the owners in
-              writing in advance.
-            </li>
-          </ul>
-        </section>
+        {RULE_SECTIONS.map((section) => (
+          <section key={section.number}>
+            <span className="ruleNumber">{section.number}</span>
+            <h2>{section.title}</h2>
+            {"items" in section ? (
+              <ul>
+                {section.items.map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            ) : (
+              <p>{section.body}</p>
+            )}
 
-        <section>
-          <span className="ruleNumber">02</span>
-          <h2>Inside the home</h2>
-          <ul>
-            <li>
-              Please treat the home, furnishings, appliances, linens and
-              equipment with care.
-            </li>
-            <li>Promptly report any damage or safety concern.</li>
-            <li>No daily housekeeping service is provided.</li>
-            <li>
-              Before departure, place soiled dishes in the dishwasher and run
-              it, dispose of rubbish and recycling as instructed, and leave the
-              home secured.
-            </li>
-            <li>
-              Guests are responsible for damage beyond normal wear and tear and
-              for unpaid charges associated with their stay.
-            </li>
-          </ul>
-        </section>
-
-        <section>
-          <span className="ruleNumber">03</span>
-          <h2>Dock, lake &amp; water safety</h2>
-          <ul>
-            <li>
-              An adult must actively supervise children at the shoreline, dock
-              and aboard any watercraft.
-            </li>
-            <li>
-              Children and non-swimmers must wear a properly fitted life jacket
-              near or on the water. Life jackets are recommended for everyone
-              underway.
-            </li>
-            <li>
-              No diving from the dock or shoreline; lake depth and conditions
-              can change.
-            </li>
-            <li>
-              Never operate a boat or personal watercraft while impaired.
-            </li>
-            <li>
-              Follow all posted lake rules and applicable Michigan boating laws.
-            </li>
-            <li>
-              <strong>
-                Every operator of a motorized watercraft provided with the
-                property must meet applicable Michigan boating-safety
-                requirements and carry any required certification.
-              </strong>
-            </li>
-            <li>
-              Guests use the dock, shoreline, kayaks, pontoon and other
-              recreational equipment at their own risk.
-            </li>
-          </ul>
-          <a
-            className="ruleCta"
-            href="https://www.michigan.gov/dnr/things-to-do/boating/safety-certificate"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Michigan boating safety information ↗
-          </a>
-        </section>
-
-        <section>
-          <span className="ruleNumber">04</span>
-          <h2>Pets</h2>
-          <ul>
-            <li>Pets are permitted only with advance owner approval.</li>
-            <li>
-              Approved pets must be included on the reservation and the
-              applicable pet fee paid.
-            </li>
-            <li>
-              Keep pets supervised, leashed outdoors and away from neighboring
-              properties.
-            </li>
-            <li>
-              Please clean up all waste and protect furniture, bedding and the
-              shoreline.
-            </li>
-            <li>
-              Guests are responsible for pet-related damage or excessive
-              cleaning.
-            </li>
-          </ul>
-        </section>
-
-        <section>
-          <span className="ruleNumber">05</span>
-          <h2>Cancellation</h2>
-          <p>
-            Cancellations received by email at least seven full days before
-            check-in qualify for a full refund. Cancellations received fewer
-            than seven full days before check-in are not eligible for a full
-            refund.
-          </p>
-        </section>
-
-        <section>
-          <span className="ruleNumber">06</span>
-          <h2>Personal property &amp; assumption of risk</h2>
-          <p>
-            The property is privately owned. Guests are responsible for their
-            own belongings and acknowledge the inherent risks associated with
-            use of a waterfront property, dock, boats, watercraft and
-            recreational equipment.
-          </p>
-        </section>
+            {section.number === "03" && (
+              <a
+                className="ruleCta"
+                href="https://www.michigan.gov/dnr/things-to-do/boating/safety-certificate"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Michigan boating safety information ↗
+              </a>
+            )}
+          </section>
+        ))}
       </div>
 
-      <section className="rulesFooter">
-        <h2>Questions before your stay?</h2>
-        <p>
-          Include them with your booking request. We personally review every
-          stay and normally respond within 24 hours.
-        </p>
-        <a href="/#request">Request your dates →</a>
-      </section>
+      {acknowledgement && (
+        <section className="rulesAcknowledgement">
+          {acknowledgement.signedAt ? (
+            <div className="rulesSigned">
+              <strong>✓ House rules already acknowledged</strong>
+              <p>
+                {acknowledgement.signedName ?? acknowledgement.name} signed rules
+                version {acknowledgement.version ?? RULES_VERSION} on{" "}
+                {new Date(acknowledgement.signedAt).toLocaleString("en-US")}.
+              </p>
+            </div>
+          ) : (
+            <AcknowledgementForm
+              bookingId={acknowledgement.id}
+              token={token}
+              guestName={acknowledgement.name}
+              guestEmail={acknowledgement.email}
+              version={RULES_VERSION}
+            />
+          )}
+        </section>
+      )}
+
+      {invalidAcknowledgementLink && (
+        <section className="rulesAcknowledgement">
+          <div className="rulesSigned rulesLinkError">
+            <strong>This acknowledgement link is invalid or has been replaced.</strong>
+            <p>Please use the latest confirmation email or contact the owners.</p>
+          </div>
+        </section>
+      )}
+
+      {!acknowledgement && !invalidAcknowledgementLink && (
+        <section className="rulesFooter">
+          <h2>Questions before your stay?</h2>
+          <p>
+            Include them with your booking request. We personally review every
+            stay and normally respond within 24 hours.
+          </p>
+          <a href="/#request">Request your dates →</a>
+        </section>
+      )}
     </main>
   );
 }
