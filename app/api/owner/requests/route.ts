@@ -41,7 +41,7 @@ export async function POST(request:Request){
   await ensureBookingRequestSchema();
   const owner=await ownerOr401();if(!owner)return Response.json({error:"Unauthorized"},{status:401});
   try{
-    const body=await request.json() as {id?:number;action?:"approve"|"decline"|"confirm"|"cancel"|"send-rules"};
+    const body=await request.json() as {id?:number;action?:"approve"|"decline"|"confirm"|"cancel"|"send-rules"|"send-payment-reminder"|"final-payment-received";instructions?:string};
     if(!body.id||!body.action)return Response.json({error:"Missing request or action."},{status:400});
     const db=getDb();const [booking]=await db.select().from(bookingRequests).where(eq(bookingRequests.id,body.id)).limit(1);
     if(!booking)return Response.json({error:"Request not found."},{status:404});
@@ -59,6 +59,34 @@ export async function POST(request:Request){
       await db.update(bookingRequests).set({rulesTokenHash:rules.hash}).where(eq(bookingRequests.id,booking.id));
       await sendMail({to:booking.email,subject:"Action requested: House Rules & Water Safety — The Vues",html:confirmationEmailHtml(booking,rules.token)});
       return Response.json({status:"rules-sent"});
+    }
+
+    if(body.action==="send-payment-reminder"){
+      if(booking.status!=="confirmed")return Response.json({error:"Payment reminders are only sent for confirmed reservations."},{status:409});
+      if(!booking.rulesAcknowledgedAt)return Response.json({error:"The guest must sign the rules before the final-payment reminder is sent."},{status:409});
+      if(booking.finalPaymentReceivedAt)return Response.json({error:"Final payment has already been received."},{status:409});
+      const quote=calculateQuote(booking.arrival,booking.departure,booking.adults,booking.children,booking.boatRental,booking.pets);
+      const depositCents=depositFor(quote.totalCents);
+      const balanceCents=Math.max(0,quote.totalCents-depositCents);
+      const paymentHtml=`<h2>Final payment reminder</h2><p>Hi ${escapeHtml(booking.name)}, your stay at The Vues at Klinger Lake begins on <strong>${escapeHtml(booking.arrival)}</strong>.</p><p>Your remaining balance is <strong>${money(balanceCents)}</strong>.</p><p style="margin:22px 0"><a href="https://www.venmo.com/u/KlingerLake68109" style="display:inline-block;background:#008CFF;color:#fff;text-decoration:none;padding:13px 18px;border-radius:7px;font-weight:bold">Pay with Venmo</a></p><div style="margin:24px 0;padding:18px;border:1px solid #e5e5e5;border-radius:10px;text-align:center"><p style="margin:0 0 10px"><strong>Or pay with Zelle</strong></p><img src="https://vuesmi.com/zelle-payment-qr.png" width="220" height="220" alt="Zelle payment QR code for Aubrey Backscheider" style="display:block;width:220px;height:220px;margin:0 auto 10px;border:0"><p style="margin:0"><strong>Aubrey Backscheider</strong><br>(513) 800-7366</p></div><p>Please include memo <strong>VUES-${booking.id}</strong>.</p><p>Once the final payment is received, we’ll send your check-in and access instructions.</p>`;
+      await sendMail({to:booking.email,subject:"Final payment reminder — The Vues",html:paymentHtml});
+      await db.update(bookingRequests).set({finalPaymentReminderSentAt:new Date().toISOString()}).where(eq(bookingRequests.id,booking.id));
+      return Response.json({status:"payment-reminder-sent"});
+    }
+
+    if(body.action==="final-payment-received"){
+      if(booking.status!=="confirmed")return Response.json({error:"Final payment can only be recorded for confirmed reservations."},{status:409});
+      if(!booking.rulesAcknowledgedAt)return Response.json({error:"The guest must sign the rules before final payment is completed."},{status:409});
+      if(booking.finalPaymentReceivedAt)return Response.json({error:"Final payment has already been received."},{status:409});
+      const instructions=body.instructions?.trim()??"";
+      if(!instructions)return Response.json({error:"Add the guest check-in instructions before sending."},{status:400});
+      const paidAt=new Date().toISOString();
+      await db.update(bookingRequests).set({finalPaymentReceivedAt:paidAt,checkInInstructions:instructions}).where(eq(bookingRequests.id,booking.id));
+      await Promise.allSettled([
+        sendMail({to:booking.email,subject:"Check-in instructions — The Vues at Klinger Lake",html:`<h2>You’re all set for the lake</h2><p>Hi ${escapeHtml(booking.name)}, we received your final payment for your stay from ${escapeHtml(booking.arrival)} through ${escapeHtml(booking.departure)}.</p><p><strong>Check-in instructions</strong></p><div style="white-space:pre-wrap;padding:16px;background:#f6f3eb;border-radius:8px">${escapeHtml(instructions)}</div><p>Safe travels — we’re looking forward to having you at The Vues.</p><p>David & Aubrey<br>The Vues at Klinger Lake</p>`}),
+        sendMail({to:["bockal@gmail.com","bockda@gmail.com"],subject:`Vues booking #${booking.id} paid in full`,html:`<p>${escapeHtml(owner.email)} marked final payment received for ${escapeHtml(booking.name)}. Check-in instructions were emailed to the guest.</p>`})
+      ]);
+      return Response.json({status:"paid-in-full"});
     }
 
     if(body.action==="confirm"){
