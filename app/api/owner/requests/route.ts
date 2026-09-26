@@ -1,4 +1,5 @@
 import { and, desc, eq, lt } from "drizzle-orm";
+import { ensureBookingRequestSchema } from "../../../../db/ensure-schema";
 import { getDb } from "../../../../db";
 import { bookingRequests } from "../../../../db/schema";
 import { getAuthorizedOwner } from "../../../owner-auth";
@@ -27,6 +28,7 @@ function confirmationEmailHtml(booking:typeof bookingRequests.$inferSelect,token
 }
 
 export async function GET(){
+  await ensureBookingRequestSchema();
   if(!await ownerOr401())return Response.json({error:"Unauthorized"},{status:401});
   const db=getDb();
   const cutoff=new Date(Date.now()-86_400_000).toISOString().slice(0,19).replace("T"," ");
@@ -36,6 +38,7 @@ export async function GET(){
 }
 
 export async function POST(request:Request){
+  await ensureBookingRequestSchema();
   const owner=await ownerOr401();if(!owner)return Response.json({error:"Unauthorized"},{status:401});
   try{
     const body=await request.json() as {id?:number;action?:"approve"|"decline"|"confirm"|"cancel"|"send-rules"};
