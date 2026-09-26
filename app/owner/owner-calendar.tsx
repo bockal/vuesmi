@@ -6,8 +6,9 @@ type Booking={
   id:number;arrival:string;departure:string;adults:number;children:number;boatRental:boolean;
   name:string;email:string;phone:string;note:string;status:string;quoteCents:number|null;
   rulesAcknowledgedAt:string|null;rulesAcknowledgedName:string|null;rulesVersion:string|null;
+  finalPaymentReceivedAt:string|null;finalPaymentReminderSentAt:string|null;checkInInstructions:string|null;
 };
-type Action="approve"|"decline"|"confirm"|"cancel"|"send-rules";
+type Action="approve"|"decline"|"confirm"|"cancel"|"send-rules"|"send-payment-reminder"|"final-payment-received";
 const usd=(c:number|null)=>c==null?"Quote pending":new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(c/100);
 const requestedDeposit=(total:number|null)=>total==null?null:Math.min(total,Math.max(25_000,Math.round(total*.30)));
 
@@ -35,9 +36,9 @@ export default function OwnerCalendar(){
     if(!r.ok){setError(d.error??"Could not remove blocked dates");return}
     await load();
   }
-  async function review(id:number,action:Action){
+  async function review(id:number,action:Action,extra:Record<string,unknown>={}){
     setWorking(id);setError("");
-    const r=await fetch("/owner/api/requests",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({id,action})});
+    const r=await fetch("/owner/api/requests",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({id,action,...extra})});
     const d=await r.json() as {error?:string};
     if(!r.ok)setError(d.error??"Could not update request");
     await load();setWorking(null);
@@ -75,6 +76,8 @@ export default function OwnerCalendar(){
                 <span>House rules <strong className={r.rulesAcknowledgedAt?"done":"pending"}>{r.rulesAcknowledgedAt?`✓ signed ${new Date(r.rulesAcknowledgedAt).toLocaleDateString()}`:"⏳ awaiting signature"}</strong></span>
                 {r.rulesAcknowledgedName&&<small>Signed by {r.rulesAcknowledgedName}{r.rulesVersion?` · version ${r.rulesVersion}`:""}</small>}
                 <span>Balance after requested deposit <strong>{usd(balance)}</strong></span>
+                <span>Final payment <strong className={r.finalPaymentReceivedAt?"done":"pending"}>{r.finalPaymentReceivedAt?`✓ received ${new Date(r.finalPaymentReceivedAt).toLocaleDateString()}`:"⏳ outstanding"}</strong></span>
+                {!r.finalPaymentReceivedAt&&r.finalPaymentReminderSentAt&&<small>Reminder sent {new Date(r.finalPaymentReminderSentAt).toLocaleDateString()}</small>}
               </div>}
 
             {r.status==="requested"&&
@@ -92,6 +95,8 @@ export default function OwnerCalendar(){
             {r.status==="confirmed"&&
               <div className="reviewActions">
                 {!r.rulesAcknowledgedAt&&<button disabled={working===r.id} onClick={()=>review(r.id,"send-rules")}>{working===r.id?"Sending…":"Send / resend rules link"}</button>}
+                {r.rulesAcknowledgedAt&&!r.finalPaymentReceivedAt&&<button disabled={working===r.id} onClick={()=>review(r.id,"send-payment-reminder")}>{working===r.id?"Sending…":"Send final payment reminder"}</button>}
+                {r.rulesAcknowledgedAt&&!r.finalPaymentReceivedAt&&<CheckInSender booking={r} working={working===r.id} onSend={(instructions)=>review(r.id,"final-payment-received",{instructions})}/>}
                 <button className="secondary" disabled={working===r.id} onClick={()=>cancelReservation(r.id)}>{working===r.id?"Working…":"Cancel reservation"}</button>
               </div>}
           </article>
@@ -117,4 +122,13 @@ export default function OwnerCalendar(){
       </section>
     </div>
   </>;
+}
+
+
+function CheckInSender({booking,working,onSend}:{booking:Booking;working:boolean;onSend:(instructions:string)=>void}){
+  const [instructions,setInstructions]=useState(booking.checkInInstructions??"");
+  return <div className="checkInSender">
+    <textarea rows={5} value={instructions} onChange={e=>setInstructions(e.target.value)} placeholder="Paste guest check-in instructions, access code, Wi-Fi details, parking notes, etc."/>
+    <button disabled={working||!instructions.trim()} onClick={()=>onSend(instructions.trim())}>{working?"Sending…":"Mark final payment received & send check-in"}</button>
+  </div>;
 }
