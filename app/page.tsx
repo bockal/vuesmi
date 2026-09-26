@@ -34,6 +34,7 @@ const photos=[
   ["/property/deck-view.jpg","Sunset views from the lakeside deck"],
   ["/property/interior-to-lake.jpg","Lake views from inside the cottage"],
   ["/property/kitchen.jpg","Renovated kitchen with quartz counters"],
+  ["/bedrooms/master-bedroom.jpg","Primary bedroom at The Vues"],
   ["/property/interior-great-room.webp","Open great room and dining space"],
   ["/property/street-arrival.jpg","A welcoming arrival at The Vues"],
   ["/property/review-kayaks.png","Kayaking on Klinger Lake"],
@@ -41,7 +42,7 @@ const photos=[
 ];
 const structuredData={"@context":"https://schema.org","@graph":[
   {"@type":"Organization","@id":"https://vuesmi.com/#organization","name":"The Vues at Klinger Lake","url":"https://vuesmi.com/","logo":"https://vuesmi.com/vues-farm-bell-512.png","sameAs":[GOOGLE_LISTING]},
-  {"@type":"VacationRental","@id":"https://vuesmi.com/#vacation-rental","name":"The Vues at Klinger Lake","alternateName":"The Vues","url":"https://vuesmi.com/","provider":{"@id":"https://vuesmi.com/#organization"},"description":"A five-bedroom lakefront vacation rental on Klinger Lake in Sturgis, Michigan, accommodating up to 12 guests with private shoreline, dock, kayaks and an EV charger.","image":photos.map(([src])=>`https://vuesmi.com${src}`),"address":{"@type":"PostalAddress","addressLocality":"Sturgis","addressRegion":"MI","postalCode":"49091","addressCountry":"US"},"sameAs":[GOOGLE_LISTING],"containsPlace":{"@type":"Accommodation","additionalType":"EntirePlace","occupancy":{"@type":"QuantitativeValue","maxValue":12,"value":12},"numberOfBedrooms":5,"numberOfBathroomsTotal":3,"amenityFeature":["ac","beachAccess","fireplace","heating","instantBookable","kitchen","privateBeachAccess","tv","washerDryer","wifi"].map(name=>({"@type":"LocationFeatureSpecification","name":name,"value":name==="instantBookable"?false:true}))}},
+  {"@type":"VacationRental","@id":"https://vuesmi.com/#vacation-rental","name":"The Vues at Klinger Lake","alternateName":"The Vues","identifier":"vuesmi-property-001","url":"https://vuesmi.com/","provider":{"@id":"https://vuesmi.com/#organization"},"description":"A five-bedroom lakefront vacation rental on Klinger Lake in Sturgis, Michigan, accommodating up to 12 guests with private shoreline, dock, kayaks and an EV charger.","image":photos.map(([src])=>`https://vuesmi.com${src}`),"address":{"@type":"PostalAddress","addressLocality":"Sturgis","addressRegion":"MI","postalCode":"49091","addressCountry":"US"},"sameAs":[GOOGLE_LISTING],"containsPlace":{"@type":"Accommodation","additionalType":"EntirePlace","occupancy":{"@type":"QuantitativeValue","maxValue":12,"value":12},"numberOfBedrooms":5,"numberOfBathroomsTotal":3,"amenityFeature":["ac","beachAccess","fireplace","heating","instantBookable","kitchen","privateBeachAccess","tv","washerDryer","wifi"].map(name=>({"@type":"LocationFeatureSpecification","name":name,"value":name==="instantBookable"?false:true}))}},
   {"@type":"FAQPage","@id":"https://vuesmi.com/#faq","mainEntity":faqs.map(([name,text])=>({"@type":"Question","name":name,"acceptedAnswer":{"@type":"Answer","text":text}}))}
 ]};
 
