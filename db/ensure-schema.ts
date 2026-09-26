@@ -10,6 +10,9 @@ const bookingRequestColumns: Array<[string,string]> = [
   ["rules_acknowledged_name", "text"],
   ["rules_version", "text"],
   ["rules_snapshot_hash", "text"],
+  ["final_payment_received_at", "text"],
+  ["final_payment_reminder_sent_at", "text"],
+  ["check_in_instructions", "text"],
 ];
 
 async function ensureBookingRequestColumnsNow() {
