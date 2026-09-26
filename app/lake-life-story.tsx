@@ -124,7 +124,7 @@ export default function LakeLifeStory() {
           <p className="eyebrow">The life behind the listing</p>
           <h2 id="lake-life-heading">Come for the lake. Leave with a story.</h2>
           <p>
-            The Vues is more than five bedrooms beside the water. It is barefoot mornings, dock lunches,
+            The Vues is more than four bedrooms and a loft beside the water. It is barefoot mornings, dock lunches,
             one-more-swim sunsets and the rare kind of time when everyone is finally in the same place.
           </p>
           <div className="storySignals" aria-label="Lake life highlights">

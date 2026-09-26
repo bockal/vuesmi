@@ -8,7 +8,7 @@ const rooms = [
   { src: "/bedrooms/bedroom-2.jpg", name: "Bedroom 2", details: "1 queen bed · Sleeps 2" },
   { src: "/bedrooms/bedroom-3.jpg", name: "Bedroom 3", details: "1 queen bed · Sleeps 2" },
   { src: "/bedrooms/bedroom-4.jpg", name: "Bedroom 4", details: "2 twin beds · Sleeps 2" },
-  { src: "/bedrooms/bedroom-5.jpg", name: "Loft bedroom", details: "2 Serta queen blowup mattresses · Sleeps 4" },
+  { src: "/bedrooms/bedroom-5.jpg", name: "Loft sleeping area", details: "2 Serta queen blowup mattresses · Sleeps 4" },
   { src: "/property/bathroom-1.jpg", name: "Bathroom 1", details: "Vanity and bathtub" },
   { src: "/property/bathroom-2.jpg", name: "Bathroom 2", details: "Walk-in shower" },
   { src: "/property/open-living-dining.jpg", name: "Open living and dining area", details: "Gather together around the table" },
