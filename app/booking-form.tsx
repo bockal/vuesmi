@@ -7,6 +7,8 @@ import TrackedLink from "./tracked-link";
 type Range={id:number;start:string;end:string;label:string;type:string};
 const iso=(d:Date)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 const todayIso=()=>iso(new Date());
+const parseIso=(value:string)=>{const [y,m,d]=value.split("-").map(Number);return new Date(y,m-1,d)};
+const pretty=(value:string)=>value?parseIso(value).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}):"";
 const addDays=(value:string,days:number)=>{const [y,m,d]=value.split("-").map(Number);return iso(new Date(y,m-1,d+days))};
 const unavailable=(value:string,ranges:Range[])=>ranges.some(r=>value>=r.start&&value<r.end);
 const stayUnavailable=(arrival:string,departure:string,ranges:Range[])=>{
@@ -14,6 +16,30 @@ const stayUnavailable=(arrival:string,departure:string,ranges:Range[])=>{
   for(let d=arrival;d<departure;d=addDays(d,1))if(unavailable(d,ranges))return true;
   return false;
 };
+
+function DatePicker({ranges,arrival,departure,onArrival,onDeparture}:{ranges:Range[];arrival:string;departure:string;onArrival:(v:string)=>void;onDeparture:(v:string)=>void}){
+  const [offset,setOffset]=useState(0);
+  const base=useMemo(()=>new Date(new Date().getFullYear(),new Date().getMonth()+offset,1),[offset]);
+  const y=base.getFullYear(),m=base.getMonth(),first=new Date(y,m,1),count=new Date(y,m+1,0).getDate();
+  const cells:Array<Date|null>=Array(first.getDay()).fill(null);for(let d=1;d<=count;d++)cells.push(new Date(y,m,d));
+  function disabled(day:string){
+    if(day<todayIso()||unavailable(day,ranges))return true;
+    if(!arrival)return false;
+    if(departure)return false;
+    if(day<=arrival||day<addDays(arrival,MIN_NIGHTS))return true;
+    return stayUnavailable(arrival,day,ranges);
+  }
+  function choose(day:string){if(disabled(day))return;if(!arrival||departure||day<=arrival){onArrival(day);onDeparture("");return;}onDeparture(day)}
+  return <div className="bookingDatePicker">
+    <div className="datePickerSummary"><div><small>ARRIVAL</small><strong>{arrival?pretty(arrival):"Select date"}</strong></div><span>→</span><div><small>DEPARTURE</small><strong>{departure?pretty(departure):arrival?"Select checkout":"Select arrival first"}</strong></div></div>
+    <div className="datePickerHead"><button type="button" onClick={()=>setOffset(v=>Math.max(0,v-1))} disabled={offset===0} aria-label="Previous month">‹</button><strong>{base.toLocaleDateString("en-US",{month:"long",year:"numeric"})}</strong><button type="button" onClick={()=>setOffset(v=>v+1)} aria-label="Next month">›</button></div>
+    <div className="datePickerWeek">{"SMTWTFS".split("").map((v,i)=><span key={i}>{v}</span>)}</div>
+    <div className="datePickerDays">{cells.map((date,i)=>{if(!date)return <span key={`blank-${i}`}/>;const day=iso(date),busy=unavailable(day,ranges),off=disabled(day),selected=day===arrival||day===departure,inStay=arrival&&departure&&day>arrival&&day<departure;return <button type="button" key={day} disabled={off} onClick={()=>choose(day)} className={`${busy?"busy ":""}${selected?"selected ":""}${inStay?"inStay":""}`} aria-label={`${pretty(day)}${busy?", unavailable":""}`}>{date.getDate()}</button>})}</div>
+    <div className="datePickerLegend"><span><i/>Available</span><span><i className="busy"/>Booked / blocked</span></div>
+    {arrival&&!departure&&<p className="datePickerHint">Now choose your departure date. Dates that would cross an unavailable night are disabled.</p>}
+    {arrival&&<button type="button" className="clearDates" onClick={()=>{onArrival("");onDeparture("")}}>Clear dates</button>}
+  </div>
+}
 
 export default function BookingForm() {
   const [state,setState]=useState<"idle"|"sending"|"sent"|"error">("idle");
@@ -30,11 +56,11 @@ export default function BookingForm() {
   useEffect(()=>{if(quote.nights<MIN_NIGHTS||quote.guests>MAX_GUESTS||conflict)return;const key=`${arrival}:${departure}:${adults}:${children}:${boatRental}:${pet}`;if(displayedQuote.current===key)return;displayedQuote.current=key;trackEvent("quote_displayed",{currency:"USD",value:quote.totalCents/100,nights:quote.nights,guests:quote.guests})},[quote,arrival,departure,adults,children,boatRental,pet,conflict]);
   function changeArrival(value:string){setArrival(value);setMessage("");if(departure&&departure<=value)setDeparture("")}
   function changeDeparture(value:string){setDeparture(value);setMessage("")}
-  async function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();if(conflict){setMessage("Those dates include an unavailable night. Please choose another stay.");setState("error");return;}setState("sending");const form=new FormData(event.currentTarget);const response=await fetch("/api/booking-requests",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(Object.fromEntries(form.entries()))});const result=await response.json() as {id?:number;error?:string};if(!response.ok){setMessage(result.error??"Please try again.");setState("error");return;}trackEvent("request_submitted",{currency:"USD",value:quote.totalCents/100,nights:quote.nights,guests:quote.guests,request_id:result.id??0});setState("sent");}
+  async function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();if(!arrival||!departure){setMessage("Please select your arrival and departure dates.");setState("error");return;}if(conflict){setMessage("Those dates include an unavailable night. Please choose another stay.");setState("error");return;}setState("sending");const form=new FormData(event.currentTarget);const response=await fetch("/api/booking-requests",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(Object.fromEntries(form.entries()))});const result=await response.json() as {id?:number;error?:string};if(!response.ok){setMessage(result.error??"Please try again.");setState("error");return;}trackEvent("request_submitted",{currency:"USD",value:quote.totalCents/100,nights:quote.nights,guests:quote.guests,request_id:result.id??0});setState("sent");}
   if(state==="sent")return <div className="success"><span>✓</span><h3>Your request is in.</h3><p>We emailed your quote and sent it to the owners for review. Nothing has been charged. If approved, you’ll receive confirmed dates, the amount due and your choice of payment options.</p><button onClick={()=>setState("idle")}>Request different dates</button></div>;
   return <form className="bookingForm" onSubmit={submit} onFocusCapture={startForm}>
-    <div className="two"><label>Arrival<input name="arrival" type="date" min={todayIso()} value={arrival} onChange={e=>changeArrival(e.target.value)} required/></label><label>Departure<input name="departure" type="date" min={arrival?addDays(arrival,MIN_NIGHTS):todayIso()} value={departure} onChange={e=>changeDeparture(e.target.value)} required/></label></div>
-    <p className="fine">{availabilityLoaded?"Booked and owner-blocked dates are checked automatically when you choose your stay.":"Checking current availability…"}</p>
+    <input name="arrival" type="hidden" value={arrival}/><input name="departure" type="hidden" value={departure}/>
+    {availabilityLoaded?<DatePicker ranges={ranges} arrival={arrival} departure={departure} onArrival={changeArrival} onDeparture={changeDeparture}/>:<p className="fine">Checking current availability…</p>}
     {conflict&&<p className="formError">Part of that stay is unavailable. Please choose different arrival or departure dates.</p>}
     <div className="two"><label>Adults (13+)<input name="adults" type="number" min="1" max={MAX_GUESTS} value={adults} onChange={e=>setAdults(Number(e.target.value))} required/></label><label>Children (ages 0–12)<input name="children" type="number" min="0" max={MAX_GUESTS-1} value={children} onChange={e=>setChildren(Number(e.target.value))} required/></label></div>
     <label className="check addOn"><input name="boatRental" type="checkbox" value="yes" checked={boatRental} onChange={e=>setBoatRental(e.target.checked)}/><span><strong>Add pontoon / jet-ski rental</strong><small>$100 per day · Kayaks are included at no charge</small></span></label>
