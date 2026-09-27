@@ -1,4 +1,4 @@
-import { and, eq, gt, lt } from "drizzle-orm";
+import { and, gt, inArray, lt } from "drizzle-orm";
 import { ensureBookingRequestSchema } from "../../../db/ensure-schema";
 import { getDb } from "../../../db";
 import { bookingRequests, dateBlocks } from "../../../db/schema";
@@ -24,7 +24,7 @@ export async function POST(request:Request){
     const db=getDb();
     const [blocks,reserved]=await Promise.all([
       db.select({id:dateBlocks.id}).from(dateBlocks).where(and(lt(dateBlocks.startDate,p.departure),gt(dateBlocks.endDate,p.arrival))).limit(1),
-      db.select({id:bookingRequests.id}).from(bookingRequests).where(and(eq(bookingRequests.status,"confirmed"),lt(bookingRequests.arrival,p.departure),gt(bookingRequests.departure,p.arrival))).limit(1),
+      db.select({id:bookingRequests.id}).from(bookingRequests).where(and(inArray(bookingRequests.status,["approved","confirmed"]),lt(bookingRequests.arrival,p.departure),gt(bookingRequests.departure,p.arrival))).limit(1),
     ]);
     if(blocks.length||reserved.length)return Response.json({error:"Those dates are no longer available. Please choose another stay."},{status:409});
     const cancellation=await createCancellationToken();
