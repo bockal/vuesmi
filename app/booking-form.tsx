@@ -35,9 +35,7 @@ function DatePicker({ranges,arrival,departure,onArrival,onDeparture}:{ranges:Ran
     <div className="datePickerHead"><button type="button" onClick={()=>setOffset(v=>Math.max(0,v-1))} disabled={offset===0} aria-label="Previous month">‹</button><strong>{base.toLocaleDateString("en-US",{month:"long",year:"numeric"})}</strong><button type="button" onClick={()=>setOffset(v=>v+1)} aria-label="Next month">›</button></div>
     <div className="datePickerWeek">{"SMTWTFS".split("").map((v,i)=><span key={i}>{v}</span>)}</div>
     <div className="datePickerDays">{cells.map((date,i)=>{if(!date)return <span key={`blank-${i}`}/>;const day=iso(date),busy=unavailable(day,ranges),off=disabled(day),selected=day===arrival||day===departure,inStay=arrival&&departure&&day>arrival&&day<departure;return <button type="button" key={day} disabled={off} onClick={()=>choose(day)} className={`${busy?"busy ":""}${selected?"selected ":""}${inStay?"inStay":""}`} aria-label={`${pretty(day)}${busy?", unavailable":""}`}>{date.getDate()}</button>})}</div>
-    <div className="datePickerLegend"><span><i/>Available</span><span><i className="busy"/>Booked / blocked</span></div>
-    {arrival&&!departure&&<p className="datePickerHint">Now choose your departure date. Dates that would cross an unavailable night are disabled.</p>}
-    {arrival&&<button type="button" className="clearDates" onClick={()=>{onArrival("");onDeparture("")}}>Clear dates</button>}
+    <div className="datePickerLegend"><span><i/>Available</span><span><i className="busy"/>Unavailable</span>{arrival&&<button type="button" className="clearDates" onClick={()=>{onArrival("");onDeparture("")}}>Clear</button>}</div>
   </div>
 }
 
